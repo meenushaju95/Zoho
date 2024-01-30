@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+
+<style>
+    .orange-link {
+        display: inline-block;
+        padding: 10px;
+        text-decoration: none;
+        color: orange;
+        border: 2px solid orange;
+        border-radius: 5px;
+        transition: background-color 0.3s, color 0.3s;
+        margin-left: 10px;
+    }
+
+    .orange-link:hover {
+        background-color: orange;
+        color: white;
+    }
+
+    .search-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .search-input {
+        padding: 5px;
+        border: 1px solid white;
+        border-radius: 5px;
+        font-size: 16px;
+        color: white;
+        flex-grow: 1; /* Grow to take remaining space */
+    }
+
+    .search-icon {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+    }
+</style>
+
+<body>
+    <div class="body-wrapper">
+        <div class="container-fluid">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'company_dashboard' %}" class="text-warning-emphasis">Dashboard</a></li>
+                    <li class="breadcrumb-item" aria-current="page"><a href="{% url 'company_attendance_list' %}" class="text-warning-emphasis">Staff Attendance List</a> </li>
+                </ol>
+            </nav>
+            <div class="container-fluid bg-black">
+
+            <div class="search-container">
+                <form>
+                    <div style="position: relative; display: flex;">
+                        <input type="text" class="mt-5" style="padding: 5px; border: 2px solid #ccc; border-radius: 5px; font-size: 14px;">
+                        <button type="submit" class="search-icon mt-5">
+                            <i class="fas fa-search" style="color: white; font-size: 18px;"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <div>
+                    <a href="#" class="orange-link mt-5">Import</a>
+                    <a href="#" class="orange-link mt-5 mt-5">Export</a>
+                    <a href="#" class="orange-link">New+</a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table mt-lg-5 mt-2 rounded" style="background-color: rgb(0, 0, 0);color: white;">
+                    <thead>
+                        <tr class="border-bottom border-dark">
+                            <th scope="col"><b>Staff Name</b></th>
+                            <th scope="col"><b>Month</b></th>
+                            <th scope="col"><b>Year</b></th>
+                            <th scope="col"><b>Working Days</b></th>
+                            <th scope="col"><b>Holy Days</b></th>
+                            <th scope="col"><b>Total Leave</b></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-bottom border-dark">
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+
+
+<style>
+  table tr td:hover {
+  cursor: pointer;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1); /* Invert color for the calendar icon */
+    }
+    .btn-container {
+    text-align: center; /* Center the content horizontally */
+  }
+
+  .btn {
+    border: 2px solid white;
+    border-radius: 10px;
+    width: 60px;
+  }
+</style>
+<body>
+  
+  <div class="body-wrapper">
+    <div class="container-fluid">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'company_dashboard' %}" class="text-warning-emphasis">Dashboard</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'company_attendance_list' %}" class="text-warning-emphasis">Attendance list</a></li>
+          <li class="breadcrumb-item"><a href="{% url 'company_mark_attendance' %}" class="text-warning-emphasis">Mark Leave</a></li>
+        </ol>
+      </nav>
+      <div style="overflow-x:auto;"> 
+
+
+        <div class="container-fluid bg-black" style="padding: 20px;">
+
+          {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-success" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+          <h5 style="color: white;">Mark Leave</h5>
+          <form method="post" action="">
+            {% csrf_token %}
+            <div class="row justify-content-center mt-5">
+              <div class="col-md-4 mb-3">
+                  
+                  <div class="input-group">
+                    <div class="input-group">
+                      
+                      
+                      <select name="employee"  class="form-control">
+                          <option>--Select Employee--</option>
+                          {% for staff in staff %}
+                          {% if staff.company_approval == 1%}
+                          <option value="staff.id">{{staff.login_details.first_name}} {{staff.login_details.last_name}}</option>
+                          {% endif %}
+                          {%endfor%}
+                      </select>
+                  </div>
+                  </div>
+              </div>
+      
+              <div class="col-md-4 mb-3">
+                  <div class="input-group">
+                    <input type="date" id="dateInput" class="form-control" required >
+                  </div>
+              </div>
+          </div>
+    
+
+
+          <div class="row justify-content-center mt-3">
+            <div class="col-md-4 mb-3">
+                
+                <div class="input-group">
+                  <div class="input-group">
+                   
+                    
+                    <select name="status"  class="form-control">
+                        <option value="leave">Leave</option>
+                        
+                    </select>
+                </div>
+                </div>
+            </div>
+    
+            <div class="col-md-4 mb-3">
+                <div class="input-group">
+                  <input type="text" name="reason" class="form-control" placeholder="Reason"  required>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-center mt-5">
+          <div class="mb-3 btn-container">
+            <input type="submit" class="btn form-control" value="Add">
+          </div>
+        </div>
+
+
+          
+
+
+
+        </div>
+
+        
+          
+      </form>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          // Function to format the date as "yyyy-mm-dd" (required format for <input type="date">)
+          function formatDate(date) {
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-based
+            const day = date.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          }
+      
+          // Get the current date
+          const currentDate = new Date();
+      
+          // Set the input value to the formatted current date
+          document.getElementById('dateInput').value = formatDate(currentDate);
+        });
+      </script>
+
+
+      
+  </div>
+</body>
+
+{% endblock %}

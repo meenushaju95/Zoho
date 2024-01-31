@@ -2,6 +2,8 @@
 {% block content %}
 {% load static %}
 
+
+
 <style>
     .orange-link {
         display: inline-block;
@@ -53,28 +55,49 @@
                 </ol>
             </nav>
             <div class="container-fluid bg-black">
-
-            <div class="search-container">
-                <form>
-                    <div style="position: relative; display: flex;">
-                        <input type="text" class="mt-5" style="padding: 5px; border: 2px solid #ccc; border-radius: 5px; font-size: 14px;">
-                        <button type="submit" class="search-icon mt-5">
-                            <i class="fas fa-search" style="color: white; font-size: 18px;"></i>
-                        </button>
+                <div class="row">
+                    <div class="col-md-3">
+                        <form>
+                            
+                                <input type="text" class="mt-5" style="padding: 5px; border: 2px solid #ccc; border-radius: 5px; font-size: 14px;">
+                                <button type="submit" class="search-icon mt-5">
+                                    <i class="fas fa-search" style="color: white; font-size: 18px;"></i>
+                                </button>
+                        </form>  
                     </div>
-                </form>
 
-                <div>
-                    <a href="#" class="orange-link mt-5">Import</a>
-                    <a href="#" class="orange-link mt-5 mt-5">Export</a>
-                    <a href="#" class="orange-link">New+</a>
+                    <div class="col-md-5">
+                        <!-- Your dropdown menu goes here -->
+                        <div class="dropdown mt-5">
+                            <button class="btn dropdown-toggle orange-link" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                              Sort By
+                            </button>
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <a class="dropdown-item" href="#" style="color: white;">Option 1</a>
+                                <a class="dropdown-item" href="#">Option 2</a>
+                                <a class="dropdown-item" href="#">Option 3</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                   
+                    <div class="col-md-4">
+                        <a href="#" class="orange-link mt-5">Import</a>
+                        <a href="#" class="orange-link mt-5 mt-5">Export</a>
+                        <a href="{% url 'company_mark_attendance' %}" class="orange-link">New+</a>
+
+                    </div>
                 </div>
-            </div>
+
+                
+
+            
 
             <div class="table-responsive">
                 <table class="table mt-lg-5 mt-2 rounded" style="background-color: rgb(0, 0, 0);color: white;">
                     <thead>
                         <tr class="border-bottom border-dark">
+                            <th scope="col"><b>#</b></th>
                             <th scope="col"><b>Staff Name</b></th>
                             <th scope="col"><b>Month</b></th>
                             <th scope="col"><b>Year</b></th>

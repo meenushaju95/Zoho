@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.conf import settings
 from datetime import date
 from datetime import datetime, timedelta
+from .models import payroll_employee
 
 # Create your views here.
 
@@ -482,7 +483,31 @@ def staff_password_change(request):
         return redirect('/')
     
 def company_attendance_list(request):
-    return render(request,'Company/company_attendance_list.html')
+    
+
+        return render(request,'Attendance/company_attendance_list.html')
+
+
+def company_mark_attendance(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        if 'login_id' not in request.session:
+            return redirect('/')
+        log_details = LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            company = CompanyDetails.objects.get(login_details=log_details)
+            employee = payroll_employee.objects.filter(company=company)
+            return render(request,'Attendance/company_mark_attendance.html',{'staff':employee})
+        if log_details.user_type=='Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            employee = payroll_employee.objects.filter(company=staff.company)
+            return render(request,'Attendance/company_mark_attendance.html',{'staff':employee})
+
+
+        
+        
+    
+
 
 
 

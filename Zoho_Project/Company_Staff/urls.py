@@ -17,9 +17,13 @@ urlpatterns = [
     path('Company/Module-Editpage',views.company_module_editpage,name='company_module_editpage'),
     path('Company/Module-Edit',views.company_module_edit,name='company_module_edit'),
     path('Company/Renew/Payment_terms',views.company_renew_terms,name='company_renew_terms'),
+    
+    
+    
+     # -------------------------------Attendance section--------------------------------
     path('company_attendance_list',views.company_attendance_list,name='company_attendance_list'),
     path('company_mark_attendance',views.company_mark_attendance,name='company_mark_attendance'),
-    
+    path('add_attendance',views.add_attendance,name='add_attendance'),
 
 
 

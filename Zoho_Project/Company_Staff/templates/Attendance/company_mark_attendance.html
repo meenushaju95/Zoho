@@ -14,11 +14,22 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     text-align: center; /* Center the content horizontally */
   }
 
-  .btn {
-    border: 2px solid white;
+  .btn-add {
+    border: 2px solid orange;
     border-radius: 10px;
-    width: 60px;
-  }
+    width: 80px;
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    transition: background-color 0.3s ease; /* Add smooth transition effect */
+}
+
+.btn-add:hover {
+    background-color: orange;
+    color: white; /* Add this line to ensure text is visible on hover */
+}
+  
+
 </style>
 <body>
   
@@ -36,38 +47,40 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
         <div class="container-fluid bg-black" style="padding: 20px;">
 
+         
+          <h3 style="color: white;">Mark Leave</h3>
           {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-success" role="alert">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-          <h5 style="color: white;">Mark Leave</h5>
-          <form method="post" action="">
+          {% for message in messages %}
+              <div class="alert alert-success" role="alert" style="color: orange;background-color: black;border: none;">
+                  {{ message }}
+              </div>
+          {% endfor %}
+      {% endif %}
+          <form method="post" action="{% url 'add_attendance' %}">
             {% csrf_token %}
             <div class="row justify-content-center mt-5">
               <div class="col-md-4 mb-3">
-                  
+                  <label class="mb-3">Employee</label><br>
                   <div class="input-group">
                     <div class="input-group">
                       
                       
-                      <select name="employee"  class="form-control">
-                          <option>--Select Employee--</option>
-                          {% for staff in staff %}
-                          {% if staff.company_approval == 1%}
-                          <option value="staff.id">{{staff.login_details.first_name}} {{staff.login_details.last_name}}</option>
-                          {% endif %}
-                          {%endfor%}
+                      <select name="employee"  class="form-control" style="font-size: 16px;color: white;">
+                          <option>Select Employee</option>
+                          {% for i in staffs %}
+                          
+                          <option value="{{i.id}}" style="color: grey;">{{i.first_name}} {{i.last_name}}</option>
+                          
+                          {% endfor %}
                       </select>
                   </div>
                   </div>
               </div>
       
               <div class="col-md-4 mb-3">
+                <label class="mb-3">Date</label><br>
                   <div class="input-group">
-                    <input type="date" id="dateInput" class="form-control" required >
+                    <input type="date" id="dateInput" name="date" class="form-control" style="font-size: 16px;color: white;" required >
                   </div>
               </div>
           </div>
@@ -76,28 +89,39 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
           <div class="row justify-content-center mt-3">
             <div class="col-md-4 mb-3">
+              <label class="mb-3">Status</label><br>
                 
                 <div class="input-group">
                   <div class="input-group">
                    
                     
-                    <select name="status"  class="form-control">
-                        <option value="leave">Leave</option>
+                    <select name="status"  class="form-control" style="font-size: 16px;color: white;">
+                        <option class="form-control" value="leave" style="font-size: 16px;">Leave</option>
                         
                     </select>
                 </div>
                 </div>
             </div>
+           
     
             <div class="col-md-4 mb-3">
+              <label class="mb-3">Reason</label><br>
                 <div class="input-group">
-                  <input type="text" name="reason" class="form-control" placeholder="Reason"  required>
+                  <input type="text" name="reason" class="form-control"  style="font-size: 16px;color: white;" required>
                 </div>
             </div>
         </div>
+        <div class="row justify-content-center">
+          <div class="col-md-3">
+            <input type="checkbox" id="myCheckbox" name="check"  required> &nbsp<label style="font-size: 16px;color: white;" required> Agree to terms and Conditions </label>
+          </div>
+        </div>
         <div class="row justify-content-center mt-5">
-          <div class="mb-3 btn-container">
-            <input type="submit" class="btn form-control" value="Add">
+          <div class="col-md-1 mb-3">
+            <input type="submit" class="btn-add form-control" value="Add">
+          </div>
+          <div class="col-md-1 mb-3">
+            <a href="{% url 'company_attendance_list' %}" class="cancel-link btn-add form-control">Cancel</a>
           </div>
         </div>
 

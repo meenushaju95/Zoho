@@ -5,7 +5,10 @@ from django.contrib import messages
 from django.conf import settings
 from datetime import date
 from datetime import datetime, timedelta
-from .models import payroll_employee
+from .models import payroll_employee,Attendance,Attendance_History
+from django.shortcuts import get_object_or_404
+from django.db.models import Count
+from django.db.models.functions import TruncMonth, ExtractYear
 
 # Create your views here.
 
@@ -482,12 +485,37 @@ def staff_password_change(request):
     else:
         return redirect('/')
     
+
+
+# -------------------------------Attendance section--------------------------------
+   
 def company_attendance_list(request):
-    
+        
+     if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        if 'login_id' not in request.session:
+            return redirect('/')
+        log_details= LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Staff':
+                staff = StaffDetails.objects.get(login_details=log_details)
+                item=Attendance.objects.filter(company=staff.company)
+                
+        if log_details.user_type == 'Company':
+            company = CompanyDetails.objects.get(login_details=log_details)
+            item=Attendance.objects.filter(company=company)
+        leave_counts = item.annotate(
+        month=TruncMonth('date'),
+        year=ExtractYear('date')
+        ).values('employee__first_name', 'employee__last_name','month', 'year').annotate(leave_count=Count('id'))
+        print(leave_counts)
+                
+        return render(request,'Attendance/company_attendance_list.html',{'attendance_list':item,'leave_counts':leave_counts})
 
-        return render(request,'Attendance/company_attendance_list.html')
+        
 
-
+            
+            
+                
 def company_mark_attendance(request):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
@@ -495,13 +523,49 @@ def company_mark_attendance(request):
             return redirect('/')
         log_details = LoginDetails.objects.get(id=log_id)
         if log_details.user_type == 'Company':
-            company = CompanyDetails.objects.get(login_details=log_details)
-            employee = payroll_employee.objects.filter(company=company)
-            return render(request,'Attendance/company_mark_attendance.html',{'staff':employee})
+            
+            employee = payroll_employee.objects.filter(login_details=log_details,status='Active')
+            return render(request,'Attendance/company_mark_attendance.html',{'staffs':employee})
         if log_details.user_type=='Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
-            employee = payroll_employee.objects.filter(company=staff.company)
-            return render(request,'Attendance/company_mark_attendance.html',{'staff':employee})
+            
+            employee = payroll_employee.objects.filter(company=staff.company,status='Active')
+            return render(request,'Attendance/company_mark_attendance.html',{'staffs':employee})
+        
+def add_attendance(request):
+        if request.method == 'POST':
+            emp_id = request.POST['employee']
+        date = request.POST['date']
+        status = request.POST['status']
+        reason = request.POST['reason']
+
+        if 'login_id' in request.session:
+            log_id = request.session['login_id']
+            log_details = LoginDetails.objects.get(id=log_id)
+
+            if log_details.user_type == 'Company':
+                employee = get_object_or_404(payroll_employee, id=emp_id, login_details=log_details)
+                company = CompanyDetails.objects.get(login_details=log_details)
+            elif log_details.user_type == 'Staff':
+                staff = StaffDetails.objects.get(login_details=log_details)
+                employee = get_object_or_404(payroll_employee, id=emp_id, company=staff.company)
+                company = staff.company
+
+            attendance, created = Attendance.objects.get_or_create(
+                employee=employee,
+                date=date,
+                defaults={'status': status, 'reason': reason, 'company': company, 'login_details': log_details}
+            )
+
+            if not created:
+                # Update the existing attendance if it already exists for the specified date
+                attendance.status = status
+                attendance.reason = reason
+                attendance.save()
+
+            messages.success(request, 'Leave Marked')
+            return redirect('company_mark_attendance')
+
 
 
         

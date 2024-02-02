@@ -47,21 +47,33 @@ class payroll_employee(models.Model):
     branch = models.CharField(max_length=100,null=True)
     transaction_type = models.CharField(max_length=100,null=True)
 
+class Holiday(models.Model):
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    holiday_name = models.CharField(max_length=255, null=True, blank=True)
+    user = models.ForeignKey(LoginDetails, on_delete=models.CASCADE, null=True, blank=True)
+    company=models.ForeignKey(CompanyDetails, on_delete=models.CASCADE, null=True,blank=True)
+
+
 
 class Attendance(models.Model):
     company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True)
     login_details=models.ForeignKey(LoginDetails,on_delete=models.CASCADE,null=True)
     employee=models.ForeignKey(payroll_employee,on_delete=models.CASCADE,null=True)
+    holiday=models.ForeignKey(Holiday,on_delete=models.CASCADE,null=True)
     date=models.DateField(null=True)
     status=models.CharField(max_length=255,null=True)
     reason=models.CharField(max_length=255,null=True)
 
+    
 class Attendance_History(models.Model):
     company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True)
     login_details=models.ForeignKey(LoginDetails,on_delete=models.CASCADE,null=True)
     attendance=models.ForeignKey(Attendance,on_delete=models.CASCADE,null=True)
     date=models.DateField(null=True)
     action=models.CharField(max_length=100,null=True)
+
+
 
 
     

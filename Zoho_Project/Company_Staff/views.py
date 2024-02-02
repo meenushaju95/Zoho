@@ -5,10 +5,13 @@ from django.contrib import messages
 from django.conf import settings
 from datetime import date
 from datetime import datetime, timedelta
-from .models import payroll_employee,Attendance,Attendance_History
+from .models import payroll_employee,Attendance,Attendance_History,Holiday
 from django.shortcuts import get_object_or_404
-from django.db.models import Count
-from django.db.models.functions import TruncMonth, ExtractYear
+from django.db.models import Count,Sum
+import calendar
+
+
+
 
 # Create your views here.
 
@@ -495,27 +498,52 @@ def company_attendance_list(request):
         log_id = request.session['login_id']
         if 'login_id' not in request.session:
             return redirect('/')
-        log_details= LoginDetails.objects.get(id=log_id)
-        if log_details.user_type == 'Staff':
-                staff = StaffDetails.objects.get(login_details=log_details)
-                item=Attendance.objects.filter(company=staff.company)
-                
-        if log_details.user_type == 'Company':
-            company = CompanyDetails.objects.get(login_details=log_details)
-            item=Attendance.objects.filter(company=company)
-        leave_counts = item.annotate(
-        month=TruncMonth('date'),
-        year=ExtractYear('date')
-        ).values('employee__first_name', 'employee__last_name','month', 'year').annotate(leave_count=Count('id'))
-        print(leave_counts)
-                
-        return render(request,'Attendance/company_attendance_list.html',{'attendance_list':item,'leave_counts':leave_counts})
-
+        log_details = LoginDetails.objects.get(id=log_id)
         
-
-            
-            
+        if log_details.user_type == 'Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            item = Attendance.objects.filter(company=staff.company)
                 
+        elif log_details.user_type == 'Company':
+            company = CompanyDetails.objects.get(login_details=log_details)
+            item = Attendance.objects.filter(company=company)
+
+        # Calculate total leave count for each employee
+        for entry in item:
+            entry.total_leave = Attendance.objects.filter(
+                employee=entry.employee,
+                date__month=entry.date.month,
+                date__year=entry.date.year
+            ).count()
+
+        # Calculate overall total leave count
+        total_leave_count = Attendance.objects.filter(
+            date__month=item.values('date__month')[0]['date__month'],
+            date__year=item.values('date__year')[0]['date__year']
+        ).values('employee').annotate(leave_count=Count('date')).count()
+
+        # Calculate total holidays for each employee
+        for entry in item:
+            entry.total_holidays = Holiday.objects.filter(
+                company=entry.company,
+                start_date__month=entry.date.month,
+                start_date__year=entry.date.year
+            ).count()
+
+        # Calculate overall total holidays count
+        total_holidays_count = Holiday.objects.filter(
+            start_date__month=item.values('date__month')[0]['date__month'],
+            start_date__year=item.values('date__year')[0]['date__year']
+        ).count()
+
+        # Calculate total working days for each employee
+        for entry in item:
+            year = entry.date.year
+            month = entry.date.month
+            total_days_in_month = calendar.monthrange(year, month)[1]
+            entry.total_working_days = total_days_in_month - (entry.total_leave + entry.total_holidays)
+
+        return render(request, 'Attendance/company_attendance_list.html', {'attendance_list': item, 'total_leave_count': total_leave_count, 'total_holidays_count': total_holidays_count})
 def company_mark_attendance(request):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
@@ -551,6 +579,13 @@ def add_attendance(request):
                 employee = get_object_or_404(payroll_employee, id=emp_id, company=staff.company)
                 company = staff.company
 
+            is_holiday = Holiday.objects.filter(company=company, start_date__lte=date, end_date__gte=date).exists()
+
+            if is_holiday:
+                messages.warning(request, 'Selected date is a company holiday.')
+                return redirect('company_mark_attendance')
+            
+
             attendance, created = Attendance.objects.get_or_create(
                 employee=employee,
                 date=date,
@@ -561,6 +596,7 @@ def add_attendance(request):
                 # Update the existing attendance if it already exists for the specified date
                 attendance.status = status
                 attendance.reason = reason
+           
                 attendance.save()
 
             messages.success(request, 'Leave Marked')

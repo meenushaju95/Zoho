@@ -107,20 +107,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        
-                        {% for attendance in attendance_list %}
-                        <tr class="border-bottom border-dark">
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ attendance.employee.first_name }} {{ attendance.employee.last_name }}</td>
-                            <td>{{ attendance.date|date:'F' }}</td>
-                            <td>{{ attendance.date|date:'Y' }}</td>
-                            <td>{{ attendance.total_working_days }}</td>
-                            
-                            <td>{{ attendance.total_holidays }}</td>
-                            <td>{{ attendance.total_leave }}</td>
-                            
-                        </tr>
-                    {% endfor %}
+                        {% for entry in all_entries %}
+                            <tr class="border-bottom border-dark">
+                                <td>{{forloop.counter}}</td>
+                                <td>{{ entry.employee.first_name }} {{ entry.employee.last_name }}</td>
+                                <td>{{ entry.target_month_name }}</td>
+                                <td>{{ entry.target_year }}</td>
+                                <td>{{ entry.work_days }}</td>
+                                <td>{{ entry.holidays }}</td>
+                                <td>{{ entry.total_leave }}</td> 
+                            </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

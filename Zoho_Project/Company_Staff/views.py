@@ -8,7 +8,8 @@ from datetime import datetime, timedelta
 from .models import payroll_employee,Attendance,Attendance_History,Holiday
 from django.shortcuts import get_object_or_404
 from django.db.models import Count,Sum
-import calendar
+from calendar import monthrange
+from collections import defaultdict
 
 
 
@@ -491,59 +492,103 @@ def staff_password_change(request):
 
 
 # -------------------------------Attendance section--------------------------------
+    
+def get_days_in_month(target_year, target_month):
+    _, days_in_month = monthrange(target_year, target_month)
+    days = [day for day in range(1, days_in_month + 1)]
+    return days
+def calculate_leave_count(employee, target_month, target_year):
+    return Attendance.objects.filter(employee=employee, date__month =target_month, date__year=target_year).count()
+def calculate_holiday_count(company, target_month, target_year):
+    start_date = f'{target_year}-{target_month:02d}-01'
+    _, last_day = monthrange(target_year, target_month)
+    end_date = f'{target_year}-{target_month:02d}-{last_day:02d}'
+
+    holidays = Holiday.objects.filter(
+        start_date__lte=end_date,
+        end_date__gte=start_date,
+        company=company,
+    )
+    return holidays.count()
+
    
 def company_attendance_list(request):
         
-     if 'login_id' in request.session:
+    if 'login_id' in request.session:
         log_id = request.session['login_id']
         if 'login_id' not in request.session:
             return redirect('/')
         log_details = LoginDetails.objects.get(id=log_id)
-        
+
         if log_details.user_type == 'Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
-            item = Attendance.objects.filter(company=staff.company)
+            items = Attendance.objects.filter(company=staff.company)
                 
         elif log_details.user_type == 'Company':
             company = CompanyDetails.objects.get(login_details=log_details)
-            item = Attendance.objects.filter(company=company)
+            items = Attendance.objects.filter(company=company)
+             
 
-        # Calculate total leave count for each employee
-        for entry in item:
-            entry.total_leave = Attendance.objects.filter(
-                employee=entry.employee,
-                date__month=entry.date.month,
-                date__year=entry.date.year
-            ).count()
+        consolidated_entries = defaultdict(list)
 
-        # Calculate overall total leave count
-        total_leave_count = Attendance.objects.filter(
-            date__month=item.values('date__month')[0]['date__month'],
-            date__year=item.values('date__year')[0]['date__year']
-        ).values('employee').annotate(leave_count=Count('date')).count()
+        for item in items:
+            target_month = item.date.month
+            target_year = item.date.year
+            employee_id = item.employee.id
 
-        # Calculate total holidays for each employee
-        for entry in item:
-            entry.total_holidays = Holiday.objects.filter(
-                company=entry.company,
-                start_date__month=entry.date.month,
-                start_date__year=entry.date.year
-            ).count()
+            leave_count = calculate_leave_count(item.employee, target_month, target_year)
 
-        # Calculate overall total holidays count
-        total_holidays_count = Holiday.objects.filter(
-            start_date__month=item.values('date__month')[0]['date__month'],
-            start_date__year=item.values('date__year')[0]['date__year']
-        ).count()
+            existing_entry = next(
+                (
+                    entry
+                    for entry in consolidated_entries[employee_id]
+                    if entry['target_month'] == target_month and entry['target_year'] == target_year
+                ),
+                None,
+            )
 
-        # Calculate total working days for each employee
-        for entry in item:
-            year = entry.date.year
-            month = entry.date.month
-            total_days_in_month = calendar.monthrange(year, month)[1]
-            entry.total_working_days = total_days_in_month - (entry.total_leave + entry.total_holidays)
+            if existing_entry:
+                existing_entry['leave'] += leave_count
+            else:
+                MONTH_NAMES = {
+                    1: 'January',
+                    2: 'February',
+                    3: 'March',
+                    4: 'April',
+                    5: 'May',
+                    6: 'June',
+                    7: 'July',
+                    8: 'August',
+                    9: 'September',
+                    10: 'October',
+                    11: 'November',
+                    12: 'December'
+                }
 
-        return render(request, 'Attendance/company_attendance_list.html', {'attendance_list': item, 'total_leave_count': total_leave_count, 'total_holidays_count': total_holidays_count})
+                entry = {
+                    'employee': item.employee,
+                    'target_month': target_month,
+                    'target_month_name': MONTH_NAMES.get(target_month, ''),
+                    'target_year': target_year,
+                    'working_days': len(get_days_in_month(target_year, target_month)),
+                    'holidays': calculate_holiday_count(item.company, target_month, target_year),
+                    'leave': leave_count,
+                    'work_days': len(get_days_in_month(target_year, target_month)) - calculate_holiday_count(item.company, target_month, target_year) - leave_count,
+                    'total_leave': leave_count,
+                }
+
+                consolidated_entries[employee_id].append(entry)
+
+        all_entries = []
+        for employee_id, entries in consolidated_entries.items():
+            for entry in entries:
+                all_entries.append(entry)
+
+        return render(request, 'Attendance/company_attendance_list.html', {
+            'all_entries': all_entries,
+            'month_name': MONTH_NAMES
+        })
+            
 def company_mark_attendance(request):
     if 'login_id' in request.session:
         log_id = request.session['login_id']

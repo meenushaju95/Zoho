@@ -2,9 +2,29 @@
 {% block content %}
 {% load static %}
 
+<!--excel export-->
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://kit.fontawesome.com/274ee977b7.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
+
+<!--excel import-->
+
+
+
+
+<!--dropdown button-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/274ee977b7.js" crossorigin="anonymous"></script>
+
+   
+
 
 
 <style>
+    .clickable-row {
+        cursor: pointer;
+    }
     .orange-link {
         display: inline-block;
         padding: 10px;
@@ -57,33 +77,31 @@
             <div class="container-fluid bg-black">
                 <div class="row">
                     <div class="col-md-3">
-                        <form>
+                        
+                        <div class="input-group mt-5">
+                            <input type="text" id="searchInput" class="form-control" placeholder=" Search here.." >
                             
-                                <input type="text" class="mt-5" style="padding: 5px; border: 2px solid #ccc; border-radius: 5px; font-size: 14px;">
-                                <button type="submit" class="search-icon mt-5">
-                                    <i class="fas fa-search" style="color: white; font-size: 18px;"></i>
-                                </button>
-                        </form>  
+                        </div>
                     </div>
-
                     <div class="col-md-5">
                         <!-- Your dropdown menu goes here -->
-                        <div class="dropdown mt-5">
-                            <button class="btn dropdown-toggle orange-link" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <div class="btn-group">
+                            <button type="button" class="btn orange-link mt-5 dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                               Sort By
                             </button>
-                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                <a class="dropdown-item" href="#" style="color: white;">Option 1</a>
-                                <a class="dropdown-item" href="#">Option 2</a>
-                                <a class="dropdown-item" href="#">Option 3</a>
+                            <div class="dropdown-menu dropdown-menu-right">
+                              <button class="dropdown-item" type="button" id="sortAll">All</button>
+                              <button class="dropdown-item" type="button" id="sortName">Employee Name</button>
+                              <button class="dropdown-item" type="button" id="sortMonth">Month</button>
                             </div>
-                        </div>
+                          </div>
                     </div>
                     
                    
                     <div class="col-md-4">
-                        <a href="#" class="orange-link mt-5">Import</a>
-                        <a href="#" class="orange-link mt-5 mt-5">Export</a>
+                        <input type="file" id="fileInput" style="display: none;" />
+                        <a href="#" class="orange-link mt-5" id="ImportExcel" >Import</a>
+                        <a href="#" class="orange-link mt-5 mt-5" id="ExportExcel">Export</a>
                         <a href="{% url 'company_mark_attendance' %}" class="orange-link">New+</a>
 
                     </div>
@@ -94,7 +112,7 @@
             
 
             <div class="table-responsive">
-                <table class="table mt-lg-5 mt-2 rounded" style="background-color: rgb(0, 0, 0);color: white;">
+                <table id="attendanceTable" class="table mt-lg-5 mt-2 rounded" style="background-color: rgb(0, 0, 0);color: white;">
                     <thead>
                         <tr class="border-bottom border-dark">
                             <th scope="col"><b>#</b></th>
@@ -108,7 +126,9 @@
                     </thead>
                     <tbody>
                         {% for entry in all_entries %}
-                            <tr class="border-bottom border-dark">
+                        <a href="">
+                        
+                            <tr class="border-bottom border-dark clickable-row" data-href="{% url 'company_mark_attendance' %}">
                                 <td>{{forloop.counter}}</td>
                                 <td>{{ entry.employee.first_name }} {{ entry.employee.last_name }}</td>
                                 <td>{{ entry.target_month_name }}</td>
@@ -117,9 +137,186 @@
                                 <td>{{ entry.holidays }}</td>
                                 <td>{{ entry.total_leave }}</td> 
                             </tr>
+                        </a>
+                        
                         {% endfor %}
+
+                        <script>
+                            document.addEventListener("DOMContentLoaded", function() {
+                                var rows = document.querySelectorAll(".clickable-row");
+                                rows.forEach(function(row) {
+                                    row.addEventListener("click", function() {
+                                        var href = this.getAttribute("data-href");
+                                        if (href) {
+                                            window.location.href = href;
+                                        }
+                                    });
+                                });
+                            });
+                        </script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var rows = document.querySelectorAll(".clickable-row");
+
+        document.getElementById("searchInput").addEventListener("input", function() {
+            var searchValue = this.value.toLowerCase();
+
+            rows.forEach(function(row) {
+                var rowText = row.textContent.toLowerCase();
+                row.style.display = rowText.includes(searchValue) ? "" : "none";
+            });
+        });
+
+        rows.forEach(function(row) {
+            row.addEventListener("click", function() {
+                var href = this.getAttribute("data-href");
+                if (href) {
+                    window.location.href = href;
+                }
+            });
+        });
+    });
+</script>
+
+
+
                     </tbody>
                 </table>
+                <script>
+                    document.addEventListener("DOMContentLoaded", function () {
+                        var table = document.getElementById("attendanceTable");
+                        var tbody = table.querySelector("tbody");
+                        var rows = Array.from(tbody.getElementsByTagName("tr"));
+                        var originalOrder = rows.slice();  // Store the original order
+                
+                        function sortTable(columnIndex, customSort) {
+                            rows.sort(function (a, b) {
+                                var aValue = a.cells[columnIndex].textContent.trim().toLowerCase();
+                                var bValue = b.cells[columnIndex].textContent.trim().toLowerCase();
+                                return customSort(aValue, bValue);
+                            });
+                
+                            // Reorder the rows in the tbody
+                            rows.forEach(function (row) {
+                                tbody.appendChild(row);
+                            });
+                        }
+                
+                        function clearSort() {
+                            // Restore the original order
+                            originalOrder.forEach(function (row, index) {
+                                tbody.appendChild(originalOrder[index]);
+                            });
+                
+                            // Update the rows array to the original order
+                            rows = originalOrder.slice();
+                        }
+                
+                        // Custom sorting function for employee names
+                        function nameSort(a, b) {
+                            return a.localeCompare(b);
+                        }
+                
+                        // Custom sorting function for month names
+                        function monthSort(a, b) {
+                            var monthOrder = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+                            return monthOrder.indexOf(a) - monthOrder.indexOf(b);
+                        }
+
+                       
+        
+                
+                        // Event listeners for sorting buttons
+                        document.getElementById("sortAll").addEventListener("click", function () {
+                            clearSort();
+                        });
+                
+                        document.getElementById("sortName").addEventListener("click", function () {
+                            sortTable(1, nameSort); // Sorting by Employee Name (column index 1)
+                        });
+                
+                        document.getElementById("sortMonth").addEventListener("click", function () {
+                            sortTable(2, monthSort); // Sorting by Month (column index 2) using custom sorting
+                        });
+                        
+                    });
+                </script>
+                <script>
+                    function exportToExcel() {
+                        var table = document.getElementById("attendanceTable");
+                        // Create a new workbook
+                        var wb = XLSX.utils.book_new();
+                
+                        // Add a worksheet with the table data
+                        var ws = XLSX.utils.table_to_sheet(table);
+                        XLSX.utils.book_append_sheet(wb, ws, "AttendanceData");
+                
+                        // Save the workbook as an Excel file
+                        XLSX.writeFile(wb, "attendance_data.xlsx");
+                    }
+                
+                    // Event listener for export button with ID "ExportExcel"
+                    document.getElementById("ExportExcel").addEventListener("click", function () {
+                        exportToExcel();
+                    });
+                </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var fileInput = document.getElementById("fileInput");
+        var importExcelButton = document.getElementById("ImportExcel");
+
+        importExcelButton.addEventListener("click", function () {
+            // Trigger file input click programmatically
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", function (event) {
+            var file = event.target.files[0];
+            if (file) {
+                // Use FileReader to read the file
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    // Parse the Excel file content
+                    var data = new Uint8Array(e.target.result);
+                    var workbook = XLSX.read(data, { type: "array" });
+
+                    // Log sheet names
+                    console.log("Sheet Names:", workbook.SheetNames);
+
+                    // Assume you have one sheet and want data from the first sheet
+                    var sheetName = workbook.SheetNames[0];
+                    console.log("Selected Sheet Name:", sheetName);
+
+                    var sheet = workbook.Sheets[sheetName];
+
+                    // Log raw sheet data
+                    console.log("Raw Sheet Data:", sheet);
+
+                    // Convert sheet data to JSON
+                    var jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                    // Log parsed JSON data
+                    console.log("Parsed JSON Data:", jsonData);
+
+                    // Process your data (jsonData) as needed
+                    // ...
+
+                    // Clear the file input
+                    fileInput.value = null;
+                };
+
+                // Read the file as binary data
+                reader.readAsArrayBuffer(file);
+            }
+        });
+
+        // Additional functionality...
+    });
+</script>
+
             </div>
             </div>
         </div>

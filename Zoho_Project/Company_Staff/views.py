@@ -7,7 +7,7 @@ from datetime import date
 from datetime import datetime, timedelta
 from .models import payroll_employee,Attendance,Attendance_History,Holiday
 from django.shortcuts import get_object_or_404
-from django.db.models import Count,Sum
+from datetime import datetime,timedelta
 from calendar import monthrange
 from collections import defaultdict
 
@@ -500,16 +500,23 @@ def get_days_in_month(target_year, target_month):
 def calculate_leave_count(employee, target_month, target_year):
     return Attendance.objects.filter(employee=employee, date__month =target_month, date__year=target_year).count()
 def calculate_holiday_count(company, target_month, target_year):
-    start_date = f'{target_year}-{target_month:02d}-01'
     _, last_day = monthrange(target_year, target_month)
-    end_date = f'{target_year}-{target_month:02d}-{last_day:02d}'
+    first_day_of_month = datetime(target_year, target_month, 1)
+    last_day_of_month = datetime(target_year, target_month, last_day) + timedelta(days=1)  # Add one day to include the entire end day
 
     holidays = Holiday.objects.filter(
-        start_date__lte=end_date,
-        end_date__gte=start_date,
+        start_date__lt=last_day_of_month,
+        end_date__gte=first_day_of_month,
         company=company,
     )
-    return holidays.count()
+
+    count = 0
+    for day in range(1, last_day + 1):
+        target_date = datetime(target_year, target_month, day)
+        if holidays.filter(start_date__lte=target_date, end_date__gte=target_date).exists():
+            count += 1
+
+    return count
 
    
 def company_attendance_list(request):

@@ -24,6 +24,7 @@ urlpatterns = [
     path('company_attendance_list',views.company_attendance_list,name='company_attendance_list'),
     path('company_mark_attendance',views.company_mark_attendance,name='company_mark_attendance'),
     path('add_attendance',views.add_attendance,name='add_attendance'),
+    path('attendance_overview/<int:employee_id>/<int:target_year>/<int:target_month>/',views.attendance_overview,name='attendance_overview'),
 
 
 

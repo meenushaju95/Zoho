@@ -10,6 +10,7 @@ from django.shortcuts import get_object_or_404
 from datetime import datetime,timedelta
 from calendar import monthrange
 from collections import defaultdict
+from django.db.models import Q
 
 
 
@@ -653,6 +654,33 @@ def add_attendance(request):
 
             messages.success(request, 'Leave Marked')
             return redirect('company_mark_attendance')
+
+def attendance_overview(request, employee_id, target_year, target_month):
+    employee_attendance = Attendance.objects.filter(
+        employee_id=employee_id,
+        date__year=target_year,
+        date__month=target_month
+    ).values('status', 'date')  # Fetch only the required fields
+    print(employee_attendance)
+    employee=payroll_employee.objects.get(id=employee_id)
+    target_month = max(1, min(target_month, 12))
+
+# Calculate the next month and year if target_month is December
+    next_month = 1 if target_month == 12 else target_month + 1
+    next_year = target_year + 1 if target_month == 12 else target_year
+
+# Construct the date strings for the start and end of the month
+    start_date = datetime(target_year, target_month, 1)
+    end_date = datetime(next_year, next_month, 1) - timedelta(days=1)
+
+    holidays = Holiday.objects.filter( Q(company=employee.company) &  # Filter by company
+        (
+            Q(start_date__year=target_year, start_date__month=target_month) |  # Start date within target month and year
+            Q(end_date__year=target_year, end_date__month=target_month) |      # End date within target month and year
+            (Q(start_date__lt=start_date) & Q(end_date__gt=end_date))  # Holiday spans the entire month
+        ))
+
+    return render(request, 'Attendance/attendance_overview.html', {'emp_attendance': employee_attendance,'holiday':holidays})
 
 
 

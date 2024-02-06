@@ -13,6 +13,7 @@
 
 
 
+
 <!--dropdown button-->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://kit.fontawesome.com/274ee977b7.js" crossorigin="anonymous"></script>
@@ -128,7 +129,7 @@
                         {% for entry in all_entries %}
                         <a href="">
                         
-                            <tr class="border-bottom border-dark clickable-row" data-href="{% url 'company_mark_attendance' %}">
+                            <tr class="border-bottom border-dark clickable-row" data-href="{% url 'attendance_overview' entry.employee.id entry.target_year entry.target_month %}">
                                 <td>{{forloop.counter}}</td>
                                 <td>{{ entry.employee.first_name }} {{ entry.employee.last_name }}</td>
                                 <td>{{ entry.target_month_name }}</td>
@@ -192,17 +193,22 @@
                         var originalOrder = rows.slice();  // Store the original order
                 
                         function sortTable(columnIndex, customSort) {
-                            rows.sort(function (a, b) {
-                                var aValue = a.cells[columnIndex].textContent.trim().toLowerCase();
-                                var bValue = b.cells[columnIndex].textContent.trim().toLowerCase();
-                                return customSort(aValue, bValue);
-                            });
-                
-                            // Reorder the rows in the tbody
-                            rows.forEach(function (row) {
-                                tbody.appendChild(row);
-                            });
-                        }
+    rows.sort(function (a, b) {
+        var aValue = a.cells[columnIndex].textContent.trim().toLowerCase();
+        var bValue = b.cells[columnIndex].textContent.trim().toLowerCase();
+        return customSort(aValue, bValue);
+    });
+
+    // Clear the existing tbody content
+    while (tbody.firstChild) {
+        tbody.removeChild(tbody.firstChild);
+    }
+
+    // Reorder the rows in the tbody
+    rows.forEach(function (row) {
+        tbody.appendChild(row);
+    });
+}
                 
                         function clearSort() {
                             // Restore the original order
@@ -263,59 +269,7 @@
                     });
                 </script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        var fileInput = document.getElementById("fileInput");
-        var importExcelButton = document.getElementById("ImportExcel");
 
-        importExcelButton.addEventListener("click", function () {
-            // Trigger file input click programmatically
-            fileInput.click();
-        });
-
-        fileInput.addEventListener("change", function (event) {
-            var file = event.target.files[0];
-            if (file) {
-                // Use FileReader to read the file
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    // Parse the Excel file content
-                    var data = new Uint8Array(e.target.result);
-                    var workbook = XLSX.read(data, { type: "array" });
-
-                    // Log sheet names
-                    console.log("Sheet Names:", workbook.SheetNames);
-
-                    // Assume you have one sheet and want data from the first sheet
-                    var sheetName = workbook.SheetNames[0];
-                    console.log("Selected Sheet Name:", sheetName);
-
-                    var sheet = workbook.Sheets[sheetName];
-
-                    // Log raw sheet data
-                    console.log("Raw Sheet Data:", sheet);
-
-                    // Convert sheet data to JSON
-                    var jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-
-                    // Log parsed JSON data
-                    console.log("Parsed JSON Data:", jsonData);
-
-                    // Process your data (jsonData) as needed
-                    // ...
-
-                    // Clear the file input
-                    fileInput.value = null;
-                };
-
-                // Read the file as binary data
-                reader.readAsArrayBuffer(file);
-            }
-        });
-
-        // Additional functionality...
-    });
-</script>
 
             </div>
             </div>

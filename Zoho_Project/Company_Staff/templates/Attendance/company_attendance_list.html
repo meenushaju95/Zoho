@@ -88,7 +88,7 @@
                         <!-- Your dropdown menu goes here -->
                         <div class="btn-group">
                             <button type="button" class="btn orange-link mt-5 dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                              Sort By
+                                <i class="fa fa-sort" aria-hidden="true"></i>
                             </button>
                             <div class="dropdown-menu dropdown-menu-right">
                               <button class="dropdown-item" type="button" id="sortAll">All</button>
@@ -127,7 +127,6 @@
                     </thead>
                     <tbody>
                         {% for entry in all_entries %}
-                        <a href="">
                         
                             <tr class="border-bottom border-dark clickable-row" data-href="{% url 'attendance_overview' entry.employee.id entry.target_year entry.target_month %}">
                                 <td>{{forloop.counter}}</td>
@@ -138,7 +137,7 @@
                                 <td>{{ entry.holidays }}</td>
                                 <td>{{ entry.total_leave }}</td> 
                             </tr>
-                        </a>
+                        
                         
                         {% endfor %}
 

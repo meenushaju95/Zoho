@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,HttpResponse
 from Register_Login.models import *
 from Register_Login.views import logout
 from django.contrib import messages
@@ -591,6 +591,10 @@ def company_attendance_list(request):
         for employee_id, entries in consolidated_entries.items():
             for entry in entries:
                 all_entries.append(entry)
+        employee_ids = [entry['employee'].id for entries in consolidated_entries.values() for entry in entries]
+        employee_ids = [int(id) for id in employee_ids]  # Convert IDs to integers
+        request.session['employee_ids'] = employee_ids
+        print(employee_ids)
 
         return render(request, 'Attendance/company_attendance_list.html', {
             'all_entries': all_entries,
@@ -661,7 +665,7 @@ def attendance_overview(request, employee_id, target_year, target_month):
         date__year=target_year,
         date__month=target_month
     ).values('status', 'date')  # Fetch only the required fields
-    print(employee_attendance)
+    
     employee=payroll_employee.objects.get(id=employee_id)
     target_month = max(1, min(target_month, 12))
 
@@ -670,17 +674,85 @@ def attendance_overview(request, employee_id, target_year, target_month):
     next_year = target_year + 1 if target_month == 12 else target_year
 
 # Construct the date strings for the start and end of the month
-    start_date = datetime(target_year, target_month, 1)
-    end_date = datetime(next_year, next_month, 1) - timedelta(days=1)
+    start_date = datetime(target_year, target_month, 1).date()
+    end_date = datetime(next_year, next_month, 1).date() - timedelta(days=1)
+    
+    holidays = Holiday.objects.filter(
+    Q(company=employee.company) & (
+    (Q(start_date__lte=end_date) & Q(end_date__gte=start_date)))  # Holidays overlapping the target month
+    
+)
+    # for getting atendance list
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        if 'login_id' not in request.session:
+            return redirect('/')
+        log_details = LoginDetails.objects.get(id=log_id)
 
-    holidays = Holiday.objects.filter( Q(company=employee.company) &  # Filter by company
-        (
-            Q(start_date__year=target_year, start_date__month=target_month) |  # Start date within target month and year
-            Q(end_date__year=target_year, end_date__month=target_month) |      # End date within target month and year
-            (Q(start_date__lt=start_date) & Q(end_date__gt=end_date))  # Holiday spans the entire month
-        ))
+        if log_details.user_type == 'Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            items = Attendance.objects.filter(company=staff.company)
+                
+        elif log_details.user_type == 'Company':
+            company = CompanyDetails.objects.get(login_details=log_details)
+            items = Attendance.objects.filter(company=company)
+             
 
-    return render(request, 'Attendance/attendance_overview.html', {'emp_attendance': employee_attendance,'holiday':holidays})
+        consolidated_entries = defaultdict(list)
+
+        for item in items:
+            target_month = item.date.month
+            target_year = item.date.year
+            employee_id = item.employee.id
+
+            leave_count = calculate_leave_count(item.employee, target_month, target_year)
+
+            existing_entry = next(
+                (
+                    entry
+                    for entry in consolidated_entries[employee_id]
+                    if entry['target_month'] == target_month and entry['target_year'] == target_year
+                ),
+                None,
+            )
+
+            if existing_entry:
+                existing_entry['leave'] += leave_count
+            else:
+                MONTH_NAMES = {
+                    1: 'January',
+                    2: 'February',
+                    3: 'March',
+                    4: 'April',
+                    5: 'May',
+                    6: 'June',
+                    7: 'July',
+                    8: 'August',
+                    9: 'September',
+                    10: 'October',
+                    11: 'November',
+                    12: 'December'
+                }
+
+                entry = {
+                    'employee': item.employee,
+                    'target_month': target_month,
+                    'target_month_name': MONTH_NAMES.get(target_month, ''),
+                    'target_year': target_year,
+                    'working_days': len(get_days_in_month(target_year, target_month)),
+                    'holidays': calculate_holiday_count(item.company, target_month, target_year),
+                    'leave': leave_count,
+                    'work_days': len(get_days_in_month(target_year, target_month)) - calculate_holiday_count(item.company, target_month, target_year) - leave_count,
+                    'total_leave': leave_count,
+                }
+
+                consolidated_entries[employee_id].append(entry)
+
+        all_entries = []
+        for employee_id, entries in consolidated_entries.items():
+            for entry in entries:
+                all_entries.append(entry)
+    return render(request, 'Attendance/attendance_overview.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries})
 
 
 

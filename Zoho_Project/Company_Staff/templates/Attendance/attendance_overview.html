@@ -5,6 +5,11 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.css" />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/274ee977b7.js" crossorigin="anonymous"></script>
+
+   
+
 
 <style>
  .white-border {
@@ -19,11 +24,15 @@
         border-radius: 5px;
         transition: background-color 0.3s, color 0.3s;
         margin-left: 10px;
+       
     }
 
     .orange-link:hover {
         background-color: orange;
         color: white;
+    }
+    .clickable-row {
+        cursor: pointer;
     }
 
 
@@ -34,6 +43,8 @@
     display: block;
     margin: 0 auto;
     text-align: center;
+    background-color: orange;
+    color: white;
     transition: background-color 0.3s ease; /* Add smooth transition effect */
 }
 .search-input {
@@ -64,9 +75,9 @@
       <div class="container-fluid bg-black" style="padding: 20px;">
       <div class="row">
        
-          <div class="col-md-4 white-border">
+          <div class="col-md-6 white-border">
             <div class="row">
-              <div class="col-md-2">
+              <div class="col-md-2 ">
                 <div class="input-group mt-5">
                  
                   <div class="btn-group">
@@ -78,23 +89,27 @@
                       <button class="dropdown-item" type="button" id="sortName">Employee Name</button>
                       <button class="dropdown-item" type="button" id="sortMonth">Month</button>
                     </div>
+                    <a href="{% url 'company_mark_attendance' %}" class="orange-link">New+</a> 
                   </div>
                   
               </div>
+              
               </div>
-              <div class="col-md-3 mt-5">
-                <a href="{% url 'company_mark_attendance' %}" class="orange-link">New+</a> 
+              <div class="col-md-3 mt-5 " >
+                
             </div>
             <div class="col-md-7 mt-5">
               <input type="text" id="searchInput" class="form-control" placeholder=" Search here.." >
           </div>
             </div>
+            <div class="row mt-5" style="margin-left: 10px;color: white;font-size: 23px;">Attendance</div>
+       
             
           
               <div style="overflow-x:auto;">
                   <div class="container-fluid bg-black" style="padding: 20px;">
                       <div class="table-responsive">
-                          <table id="attendanceTable" class="table mt-lg-5 mt-2 rounded" style="background-color: rgb(0, 0, 0);color: white;">
+                          <table id="attendanceTable" class="table mt-lg-1 mt-2 rounded" style="background-color: rgb(0, 0, 0);color: white;">
                               <thead>
                                   <tr class="border-bottom border-dark">
                                       <th scope="col"><b>#</b></th>
@@ -102,37 +117,169 @@
                                       <th scope="col"><b>Month</b></th>
                                       <th scope="col"><b>Year</b></th>
                                       <th scope="col"><b>Working Days</b></th>
-                                      <th scope="col"><b>Holy Days</b></th>
+                                     
                                       <th scope="col"><b>Total Leave</b></th>
                                   </tr>
                               </thead>
                               <tbody>
                                   {% for entry in entries %}
-                                      <tr class="border-bottom border-dark clickable-row" data-href="">
+                                  <tr class="border-bottom border-dark clickable-row" data-href="{% url 'attendance_calendar' entry.employee.id entry.target_year entry.target_month %}">
                                           <td>{{forloop.counter}}</td>
                                           <td>{{ entry.employee.first_name }} {{ entry.employee.last_name }}</td>
                                           <td>{{ entry.target_month_name }}</td>
                                           <td>{{ entry.target_year }}</td>
                                           <td>{{ entry.work_days }}</td>
-                                          <td>{{ entry.holidays }}</td>
+                                          
                                           <td>{{ entry.total_leave }}</td>
                                       </tr>
                                   {% endfor %}
                               </tbody>
+
+                              <script>
+                                document.addEventListener("DOMContentLoaded", function() {
+                                    var rows = document.querySelectorAll(".clickable-row");
+                                    rows.forEach(function(row) {
+                                        row.addEventListener("click", function() {
+                                            var href = this.getAttribute("data-href");
+                                            if (href) {
+                                                window.location.href = href;
+                                            }
+                                        });
+                                    });
+                                });
+                            </script>
+    
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var rows = document.querySelectorAll(".clickable-row");
+    
+            document.getElementById("searchInput").addEventListener("input", function() {
+                var searchValue = this.value.toLowerCase();
+    
+                rows.forEach(function(row) {
+                    var rowText = row.textContent.toLowerCase();
+                    row.style.display = rowText.includes(searchValue) ? "" : "none";
+                });
+            });
+    
+            rows.forEach(function(row) {
+                row.addEventListener("click", function() {
+                    var href = this.getAttribute("data-href");
+                    if (href) {
+                        window.location.href = href;
+                    }
+                });
+            });
+        });
+    </script>
+    
                           </table>
+                          <script>
+                            document.addEventListener("DOMContentLoaded", function() {
+                                var rows = document.querySelectorAll(".clickable-row");
+                        
+                                document.getElementById("searchInput").addEventListener("input", function() {
+                                    var searchValue = this.value.toLowerCase();
+                        
+                                    rows.forEach(function(row) {
+                                        var rowText = row.textContent.toLowerCase();
+                                        row.style.display = rowText.includes(searchValue) ? "" : "none";
+                                    });
+                                });
+                        
+                                rows.forEach(function(row) {
+                                    row.addEventListener("click", function() {
+                                        var href = this.getAttribute("data-href");
+                                        if (href) {
+                                            window.location.href = href;
+                                        }
+                                    });
+                                });
+                            });
+                        </script>
+                        
+                        
+                        
+                                            </tbody>
+                                        </table>
+                                        <script>
+                                            document.addEventListener("DOMContentLoaded", function () {
+                                                var table = document.getElementById("attendanceTable");
+                                                var tbody = table.querySelector("tbody");
+                                                var rows = Array.from(tbody.getElementsByTagName("tr"));
+                                                var originalOrder = rows.slice();  // Store the original order
+                                        
+                                                function sortTable(columnIndex, customSort) {
+                            rows.sort(function (a, b) {
+                                var aValue = a.cells[columnIndex].textContent.trim().toLowerCase();
+                                var bValue = b.cells[columnIndex].textContent.trim().toLowerCase();
+                                return customSort(aValue, bValue);
+                            });
+                        
+                            // Clear the existing tbody content
+                            while (tbody.firstChild) {
+                                tbody.removeChild(tbody.firstChild);
+                            }
+                        
+                            // Reorder the rows in the tbody
+                            rows.forEach(function (row) {
+                                tbody.appendChild(row);
+                            });
+                        }
+                                        
+                                                function clearSort() {
+                                                    // Restore the original order
+                                                    originalOrder.forEach(function (row, index) {
+                                                        tbody.appendChild(originalOrder[index]);
+                                                    });
+                                        
+                                                    // Update the rows array to the original order
+                                                    rows = originalOrder.slice();
+                                                }
+                                        
+                                                // Custom sorting function for employee names
+                                                function nameSort(a, b) {
+                                                    return a.localeCompare(b);
+                                                }
+                                        
+                                                // Custom sorting function for month names
+                                                function monthSort(a, b) {
+                                                    var monthOrder = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+                                                    return monthOrder.indexOf(a) - monthOrder.indexOf(b);
+                                                }
+                        
+                                               
+                                
+                                        
+                                                // Event listeners for sorting buttons
+                                                document.getElementById("sortAll").addEventListener("click", function () {
+                                                    clearSort();
+                                                });
+                                        
+                                                document.getElementById("sortName").addEventListener("click", function () {
+                                                    sortTable(1, nameSort); // Sorting by Employee Name (column index 1)
+                                                });
+                                        
+                                                document.getElementById("sortMonth").addEventListener("click", function () {
+                                                    sortTable(2, monthSort); // Sorting by Month (column index 2) using custom sorting
+                                                });
+                                                
+                                            });
+                                        </script>
                       </div>
                   </div>
               </div>
           </div>
-          <div class="col-md-8 "  >
+          <div class="col-md-6 "  >
             <div class="row">
               <div class="col-md-3 mt-5">
-                <a href="" class="orange-link"><i class="fas fa-eye"></i> overview</a>
+                <a href="" class="orange-link" style="background-color: orange;color: white;"><i class="fas fa-eye"></i> overview</a>
             </div>
             <div class="col-md-4"></div>
 
             <div class="col-md-5 mt-5">
-              <a href="" class="orange-link"><i class="fas fa-comment"></i></a>
+              <a href="" class="orange-link" data-toggle="modal" data-target="#commentModal"><i class="fas fa-comment"></i></a>
               <a href="" class="orange-link"><i class="fas fa-history"></i></a>
               <a href="" class="orange-link"><i class="fas fa-times"></i></a>
           </div>
@@ -140,6 +287,8 @@
            
             
           </div>
+
+          <div class="row mt-5" style="margin-left: 10px;color: white;font-size: 23px;">{{ employee.first_name }} {{ employee.last_name }}</div>
             
       
 
@@ -147,9 +296,9 @@
            
            
            
-            <div class="row mt-1" style="padding: 30px;"></div>
            
-              <div id='calendar' style="background-color: white;"></div>
+           
+              <div id='calendar' style="background-color:black;"></div>
             
           </div>
       </div>
@@ -168,6 +317,7 @@
                       title: '{{ entry.status }}',
                       start: '{{ entry.date|date:"Y-m-d" }}',
                       allDay: true,
+                      color:'orange',
                   },
               {% endfor %}
               // Holidays
@@ -184,11 +334,11 @@
           eventContent: function(arg) {
               var eventElement = document.createElement('div');
               eventElement.innerHTML = arg.event.title;
-              eventElement.style.width = '120px';
+              eventElement.style.width = '110px';
               eventElement.style.height = '30px';
               eventElement.style.fontSize = '20px';
               eventElement.style.textTransform = 'capitalize';
-              eventElement.style.marginLeft = '10px';
+              eventElement.style.marginLeft = '0px';
               return { domNodes: [eventElement] };
           },
       });
@@ -209,6 +359,69 @@
       calendar.render();
   });
 </script>
+
+
+
+
+
+
+<div class="modal fade"  id="commentModal" tabindex="-1" role="dialog" aria-labelledby="commentModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content bg-dark">
+        <div class="modal-header">
+          <h5 class="modal-title" id="commentModalLabel" style="color: white;">Add Comment</h5>
+          
+            
+        </div>
+        <div class="modal-body">
+            <form method="post" action="{% url 'add_comment' %}">
+                {% csrf_token %}
+            
+                <input type="hidden" name="target_month" value="{{ entry.target_month }}">
+                <input type="hidden" name="target_year" value="{{ entry.target_year }}">
+          <textarea id="commentText" name="comment" class="form-control" rows="4" placeholder="Add Comments here"></textarea>
+         
+          
+          <table class="table mt-3">
+            <thead>
+              <tr>
+                <th scope="col" style="color: white;">Sl No</th>
+                <th scope="col" style="color: white;">Comment</th>
+                <th scope="col" style="color: white;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+             
+              {% for comment in comments %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ comment.comment }}</td>
+                <td>
+                 
+                  <button class="btn btn-danger"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                </td>
+              </tr>
+              {% empty %}
+             
+              <tr>
+                <td colspan="3" class="text-center">No comments found</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          
+          <button type="button" class="btn" data-dismiss="modal" style="background-color: orange;color: white;">Close</button>
+          
+          <button type="submit" class="btn" style="background-color: orange;color: white;">Save</button></form>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+
 </div>
 </body>
 {% endblock %}

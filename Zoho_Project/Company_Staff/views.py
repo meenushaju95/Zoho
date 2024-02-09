@@ -5,12 +5,14 @@ from django.contrib import messages
 from django.conf import settings
 from datetime import date
 from datetime import datetime, timedelta
-from .models import payroll_employee,Attendance,Attendance_History,Holiday
+from .models import payroll_employee,Attendance,Attendance_History,Holiday,Attendance_comment
 from django.shortcuts import get_object_or_404
 from datetime import datetime,timedelta
 from calendar import monthrange
 from collections import defaultdict
 from django.db.models import Q
+import calendar
+
 
 
 
@@ -659,7 +661,7 @@ def add_attendance(request):
             messages.success(request, 'Leave Marked')
             return redirect('company_mark_attendance')
 
-def attendance_overview(request, employee_id, target_year, target_month):
+def attendance_calendar(request, employee_id, target_year, target_month):
     employee_attendance = Attendance.objects.filter(
         employee_id=employee_id,
         date__year=target_year,
@@ -751,8 +753,44 @@ def attendance_overview(request, employee_id, target_year, target_month):
         all_entries = []
         for employee_id, entries in consolidated_entries.items():
             for entry in entries:
+                
                 all_entries.append(entry)
-    return render(request, 'Attendance/attendance_overview.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries})
+    target_month_name = calendar.month_name[target_month]
+    comment = Attendance_comment.objects.filter(company=company,month=target_month,year=target_year)
+    return render(request, 'Attendance/attendance_overview.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries,'employee':employee,'comments':comment})
+
+def add_comment(request):
+    if request.method == 'POST':
+        if 'login_id' in request.session:
+            log_id = request.session['login_id']
+            if 'login_id' not in request.session:
+                return redirect('/')
+            log_details = LoginDetails.objects.get(id=log_id)
+
+            if log_details.user_type == 'Staff':
+                staff = StaffDetails.objects.get(login_details=log_details)
+                company = CompanyDetails.objects.get(id=staff.company)
+                    
+            elif log_details.user_type == 'Company':
+                company = CompanyDetails.objects.get(login_details=log_details)
+            target_month = request.POST.get('target_month')
+            target_year = request.POST.get('target_year')
+            comment = request.POST['comment']
+            comment = Attendance_comment.objects.create(
+            comment=comment,
+            month=target_month,
+            year=target_year,
+            company=company,
+            login_details=log_details
+            # Add any other fields as needed
+        )
+            return redirect('company_mark_attendance')
+            
+            
+            
+                
+                    
+
 
 
 

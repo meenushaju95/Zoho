@@ -662,6 +662,13 @@ def add_attendance(request):
             return redirect('company_mark_attendance')
 
 def attendance_calendar(request, employee_id, target_year, target_month):
+    calendar_data = {
+        'employee_id': employee_id,
+        'target_year': target_year,
+        'target_month': target_month,
+       
+    }
+    comment = Attendance_comment.objects.filter(month=target_month,year=target_year,employee=employee_id)
     employee_attendance = Attendance.objects.filter(
         employee_id=employee_id,
         date__year=target_year,
@@ -683,7 +690,8 @@ def attendance_calendar(request, employee_id, target_year, target_month):
     Q(company=employee.company) & (
     (Q(start_date__lte=end_date) & Q(end_date__gte=start_date)))  # Holidays overlapping the target month
     
-)
+)   
+   
     # for getting atendance list
     if 'login_id' in request.session:
         log_id = request.session['login_id']
@@ -755,9 +763,9 @@ def attendance_calendar(request, employee_id, target_year, target_month):
             for entry in entries:
                 
                 all_entries.append(entry)
-    target_month_name = calendar.month_name[target_month]
-    comment = Attendance_comment.objects.filter(company=company,month=target_month,year=target_year)
-    return render(request, 'Attendance/attendance_overview.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries,'employee':employee,'comments':comment})
+   
+    
+    return render(request, 'Attendance/attendance_overview.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries,'employee':employee,'comments':comment,'calendar_data':calendar_data})
 
 def add_comment(request):
     if request.method == 'POST':
@@ -769,27 +777,38 @@ def add_comment(request):
 
             if log_details.user_type == 'Staff':
                 staff = StaffDetails.objects.get(login_details=log_details)
-                company = CompanyDetails.objects.get(id=staff.company)
+                company = staff.company
                     
             elif log_details.user_type == 'Company':
                 company = CompanyDetails.objects.get(login_details=log_details)
-            target_month = request.POST.get('target_month')
-            target_year = request.POST.get('target_year')
-            comment = request.POST['comment']
-            comment = Attendance_comment.objects.create(
-            comment=comment,
-            month=target_month,
-            year=target_year,
-            company=company,
-            login_details=log_details
-            # Add any other fields as needed
-        )
-            return redirect('company_mark_attendance')
             
+            employe = request.POST['employee']
+            emp=payroll_employee.objects.get(id=employe)
             
-            
+            target_month = request.POST['target_month']
+            target_year = request.POST['target_year']
+            comment = request.POST.get('comment')
+            print(employe,target_month,target_year)
+            comment = Attendance_comment(
+                comment=comment,
+                employee=emp,
+                month=target_month,
+                year=target_year, 
+                company=company,
+                login_details=log_details
+               
+            )
+            comment.save()
+            return redirect('attendance_calendar', employee_id=employe, target_year=target_year, target_month=target_month)
+           
+def delete_attendance_comment(request,id):
+    comment = Attendance_comment.objects.get(id=id)    
+    comment.delete()  
+    return redirect('attendance_calendar', employee_id=comment.employee.id, target_year=comment.year, target_month=comment.month)       
+                
                 
                     
+                        
 
 
 

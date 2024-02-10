@@ -76,9 +76,10 @@ class Attendance_History(models.Model):
 class Attendance_comment(models.Model):
     company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True)
     login_details=models.ForeignKey(LoginDetails,on_delete=models.CASCADE,null=True)
+    employee=models.ForeignKey(payroll_employee,on_delete=models.CASCADE,null=True)
     comment = models.TextField(null=True) 
-    month = models.CharField(max_length=200, null=True)  
-    year = models.CharField(max_length=10, null=True)  
+    month = models.IntegerField(null=True)  
+    year = models.IntegerField(null=True)  
 
 
 

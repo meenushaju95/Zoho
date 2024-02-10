@@ -123,7 +123,9 @@
                               </thead>
                               <tbody>
                                   {% for entry in entries %}
-                                  <tr class="border-bottom border-dark clickable-row" data-href="{% url 'attendance_calendar' entry.employee.id entry.target_year entry.target_month %}">
+                                  <tr class="border-bottom border-dark clickable-row"  data-href="{% url 'attendance_calendar' entry.employee.id entry.target_year entry.target_month %}" >
+                                 
+                                 
                                           <td>{{forloop.counter}}</td>
                                           <td>{{ entry.employee.first_name }} {{ entry.employee.last_name }}</td>
                                           <td>{{ entry.target_month_name }}</td>
@@ -135,19 +137,21 @@
                                   {% endfor %}
                               </tbody>
 
+                              
                               <script>
-                                document.addEventListener("DOMContentLoaded", function() {
-                                    var rows = document.querySelectorAll(".clickable-row");
-                                    rows.forEach(function(row) {
-                                        row.addEventListener("click", function() {
-                                            var href = this.getAttribute("data-href");
-                                            if (href) {
-                                                window.location.href = href;
-                                            }
-                                        });
+                                $(document).ready(function() {
+                                    $('.comment-link').click(function() {
+                                        var employeeId = $(this).data('employee-id');
+                                        var targetMonth = $(this).data('target-month');
+                                        var targetYear = $(this).data('target-year');
+                                        
+                                        // Set hidden input values in the modal
+                                        $('#commentEmployeeId').val(employeeId);
+                                        $('#commentMonth').val(targetMonth);
+                                        $('#commentYear').val(targetYear);
                                     });
                                 });
-                            </script>
+                            </script>                
     
     
     <script>
@@ -279,7 +283,7 @@
             <div class="col-md-4"></div>
 
             <div class="col-md-5 mt-5">
-              <a href="" class="orange-link" data-toggle="modal" data-target="#commentModal"><i class="fas fa-comment"></i></a>
+              <a href="" class="orange-link comment-link" data-toggle="modal" data-target="#commentModal" ><i class="fas fa-comment"></i></a>
               <a href="" class="orange-link"><i class="fas fa-history"></i></a>
               <a href="" class="orange-link"><i class="fas fa-times"></i></a>
           </div>
@@ -301,7 +305,7 @@
               <div id='calendar' style="background-color:black;"></div>
             
           </div>
-      </div>
+      </div> 
   </div>
 </div>
 
@@ -341,6 +345,7 @@
               eventElement.style.marginLeft = '0px';
               return { domNodes: [eventElement] };
           },
+          
       });
 
       // Extract year and month from the first entry in emp_attendance
@@ -364,7 +369,6 @@
 
 
 
-
 <div class="modal fade"  id="commentModal" tabindex="-1" role="dialog" aria-labelledby="commentModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
       <div class="modal-content bg-dark">
@@ -374,12 +378,12 @@
             
         </div>
         <div class="modal-body">
-            <form method="post" action="{% url 'add_comment' %}">
+            <form method="post" action="{% url 'add_comment' %}" id="commentForm">
                 {% csrf_token %}
-            
-                <input type="hidden" name="target_month" value="{{ entry.target_month }}">
-                <input type="hidden" name="target_year" value="{{ entry.target_year }}">
-          <textarea id="commentText" name="comment" class="form-control" rows="4" placeholder="Add Comments here"></textarea>
+                <input type="hidden"  name="employee" value="{{calendar_data.employee_id}}">
+                <input type="hidden" name="target_month" value="{{ calendar_data.target_month }}">
+                <input type="hidden"  name="target_year" value="{{ calendar_data.target_year }}">
+          <textarea id="commentText" name="comment" class="form-control" rows="4" placeholder="Add Comments here" style="color: white;font-size: 16px;"></textarea>
          
           
           <table class="table mt-3">
@@ -393,12 +397,13 @@
             <tbody>
              
               {% for comment in comments %}
-              <tr>
-                <td>{{ forloop.counter }}</td>
-                <td>{{ comment.comment }}</td>
+              <tr >
+                <td style="color: white;font-size: 16px;">{{ forloop.counter }}</td>
+                <td style="color: white;font-size: 16px;">{{ comment.comment }}</td>
+                
                 <td>
                  
-                  <button class="btn btn-danger"><i class="fa fa-trash" aria-hidden="true"></i></button>
+                  <a href="{% url 'delete_comment' comment.id %}" class="btn" ><i class="fa fa-trash" aria-hidden="true" style="color: white;"></i></a>
                 </td>
               </tr>
               {% empty %}
@@ -414,12 +419,15 @@
           
           <button type="button" class="btn" data-dismiss="modal" style="background-color: orange;color: white;">Close</button>
           
-          <button type="submit" class="btn" style="background-color: orange;color: white;">Save</button></form>
+          <button type="submit" class="btn" style="background-color: orange;color: white;">Save</button>
+        </form>
         </div>
       </div>
     </div>
   </div>
-  
+
+
+
 
 
 </div>

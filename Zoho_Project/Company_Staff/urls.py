@@ -27,6 +27,7 @@ urlpatterns = [
     path('attendance_calendar/<int:employee_id>/<int:target_year>/<int:target_month>/',views.attendance_calendar,name='attendance_calendar'),
     path('add_comment',views.add_comment,name='add_comment'),
     path('delete_comment/<int:id>',views.delete_attendance_comment,name='delete_comment'),
+    path('attendance_overview/<int:employee_id>/<int:target_month>/<int:target_year>/',views.attendance_overview,name='attendance_overview'),
 
 
 

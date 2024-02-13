@@ -28,9 +28,9 @@ urlpatterns = [
     path('add_comment',views.add_comment,name='add_comment'),
     path('delete_comment/<int:id>',views.delete_attendance_comment,name='delete_comment'),
     path('attendance_overview/<int:employee_id>/<int:target_month>/<int:target_year>/',views.attendance_overview,name='attendance_overview'),
-
-
-
+    path('attendance_pdf/<int:employee_id>/<int:target_month>/<int:target_year>',views.attendance_pdf,name='attendance_pdf'),
+    path('attendance_email/<int:employee_id>/<int:target_month>/<int:target_year>',views.attendance_email,name='attendance_email'),
+    path('attendance_edit/<int:item_id>',views.attendance_edit,name='attendance_edit'),
 
 
     # -------------------------------Staff section--------------------------------

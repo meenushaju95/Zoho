@@ -12,6 +12,11 @@ from calendar import monthrange
 from collections import defaultdict
 from django.db.models import Q
 import calendar
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from django.core.mail import EmailMessage
+from io import BytesIO
+import os
 
 
 
@@ -854,6 +859,7 @@ def attendance_overview(request, employee_id, target_month, target_year):
     
 # Filter holidays that fall within the target month and year
         days_in_month = get_days_in_month(target_year, target_month)
+        current_url = request.build_absolute_uri()
 
     # Calculate the leave count for the employee
         leave_count = calculate_leave_count(employee, target_month, target_year)
@@ -864,18 +870,212 @@ def attendance_overview(request, employee_id, target_month, target_year):
     # Calculate the working days
         working_days = len(days_in_month) - leave_count - holiday_count
 
-        return render(request,'attendance/attendance_overview.html',{'items':items,'employee': employee,'tm':target_month,'target_month': target_month_name,'target_year': target_year,'leave_count': leave_count,'holiday_count': holiday_count,'working_days': working_days})
-                 
+        return render(request,'attendance/attendance_overview.html',{'current_url': current_url,'items':items,'employee': employee,'tm':target_month,'target_month': target_month_name,'target_year': target_year,'leave_count': leave_count,'holiday_count': holiday_count,'working_days': working_days})
+def attendance_pdf(request,employee_id,target_month,target_year) :
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        if 'login_id' not in request.session:
+            return redirect('/')
+        log_details = LoginDetails.objects.get(id=log_id)
+        employee = payroll_employee.objects.get(id=employee_id)
+
+        if log_details.user_type == 'Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            items = Attendance.objects.filter(company=staff.company,date__month=target_month,date__year=target_year)
+                
+        elif log_details.user_type == 'Company':
+            company = CompanyDetails.objects.get(login_details=log_details)
+            items = Attendance.objects.filter(company=company,employee=employee,date__month=target_month,date__year=target_year)
+       
+        
+        target_month = max(1, min(target_month, 12))
+        target_month = int(target_month)
+
+# Calculate the next month and year if target_month is December
+        next_month = 1 if target_month == 12 else target_month + 1
+        next_year = target_year + 1 if target_month == 12 else target_year
+
+# Construct the date strings for the start and end of the month
+        start_date = datetime(target_year, target_month, 1).date()
+        end_date = datetime(next_year, next_month, 1).date() - timedelta(days=1)
+        
+        MONTH_NAMES = {
+    1: 'January',
+    2: 'February',
+    3: 'March',
+    4: 'April',
+    5: 'May',
+    6: 'June',
+    7: 'July',
+    8: 'August',
+    9: 'September',
+    10: 'October',
+    11: 'November',
+    12: 'December'
+}
+        
+       
+        target_month_name = MONTH_NAMES[target_month]
+
+    
+# Filter holidays that fall within the target month and year
+        days_in_month = get_days_in_month(target_year, target_month)
+
+    # Calculate the leave count for the employee
+        leave_count = calculate_leave_count(employee, target_month, target_year)
+
+    # Calculate the holiday count for the company
+        holiday_count = calculate_holiday_count(employee.company, target_month, target_year)
+
+    # Calculate the working days
+        working_days = len(days_in_month) - leave_count - holiday_count
+
+        template_path = 'attendance/attendance_pdf.html'
+    context = {
+        'items': items,
+        'employee': employee,
+        'target_month': target_month_name,
+        'target_year': target_year,
+        'leave_count': leave_count,
+        'holiday_count': holiday_count,
+        'working_days': working_days
+    }
+
+    html = get_template(template_path).render(context)
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=attendance.pdf'
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    if pisa_status.err:
+        return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    return response
+def attendance_email(request,employee_id,target_month,target_year):
+    if request.method == 'POST':
+        try:
+            emails_string = request.POST['email_ids']
+
+                    # Split the string by commas and remove any leading or trailing whitespace
+            emails_list = [email.strip() for email in emails_string.split(',')]
+            email_message = request.POST['email_message']
+            if 'login_id' in request.session:
+                log_id = request.session['login_id']
+                if 'login_id' not in request.session:
+                    return redirect('/')
+                log_details = LoginDetails.objects.get(id=log_id)
+                employee = payroll_employee.objects.get(id=employee_id)
+
+                if log_details.user_type == 'Staff':
+                    staff = StaffDetails.objects.get(login_details=log_details)
+                    items = Attendance.objects.filter(company=staff.company,date__month=target_month,date__year=target_year)
+                        
+                elif log_details.user_type == 'Company':
+                    company = CompanyDetails.objects.get(login_details=log_details)
+                    items = Attendance.objects.filter(company=company,employee=employee,date__month=target_month,date__year=target_year)
+            
+                
+                target_month = max(1, min(target_month, 12))
+                target_month = int(target_month)
+
+        
+                next_month = 1 if target_month == 12 else target_month + 1
+                next_year = target_year + 1 if target_month == 12 else target_year
+
+        
+                start_date = datetime(target_year, target_month, 1).date()
+                end_date = datetime(next_year, next_month, 1).date() - timedelta(days=1)
+                
+                MONTH_NAMES = {
+            1: 'January',
+            2: 'February',
+            3: 'March',
+            4: 'April',
+            5: 'May',
+            6: 'June',
+            7: 'July',
+            8: 'August',
+            9: 'September',
+            10: 'October',
+            11: 'November',
+            12: 'December'
+        }
+                
+            
+                target_month_name = MONTH_NAMES[target_month]
+
+            
+       
+                days_in_month = get_days_in_month(target_year, target_month)
+
+            
+                leave_count = calculate_leave_count(employee, target_month, target_year)
+
+           
+                holiday_count = calculate_holiday_count(employee.company, target_month, target_year)
+
+           
+                working_days = len(days_in_month) - leave_count - holiday_count
+                context = {
+            'items': items,
+            'company':company,
+            'employee': employee,
+            'target_month': target_month_name,
+            'target_year': target_year,
+            'leave_count': leave_count,
+            'holiday_count': holiday_count,
+            'working_days': working_days
+        }
+                template_path = 'attendance/attendance_pdf.html'
+                template = get_template(template_path)
+
+                html  = template.render(context)
+                result = BytesIO()
+                pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)#, link_callback=fetch_resources)
+                pdf = result.getvalue()
+                filename = f'Attendance Details - {employee.first_name} {employee.last_name}.pdf'
+                subject = f"Attendance Details - {company.company_name}"
+                email = EmailMessage(subject, f"Hi,\nPlease find the attached file for -{employee.first_name} {employee.last_name}. \n{email_message}\n\n--\nRegards,\n{company.company_name}\n{company.address}\n{company.city} - {company.state}\n{company.contact}", from_email=settings.EMAIL_HOST_USER, to=emails_list)
+                email.attach(filename, pdf, "application/pdf")
+                email.send(fail_silently=False)
+
+                messages.success(request, 'Statement has been shared via email successfully..!')
+                return redirect(attendance_overview,employee_id,target_month,target_year)
+        except Exception as e:
+                
+                messages.error(request, f'{e}')
+                return redirect(attendance_overview,employee_id,target_month,target_year)
+        
+def attendance_edit(request,item_id):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        if 'login_id' not in request.session:
+            return redirect('/')
+        log_details = LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            
+            employee = payroll_employee.objects.filter(login_details=log_details,status='Active')
+            
+        if log_details.user_type=='Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            
+            employee = payroll_employee.objects.filter(company=staff.company,status='Active')
+            
+        attendance=Attendance.objects.get(id=item_id)
+        target_month = attendance.date.month
+        target_year = attendance.date.year
+        return render(request,'attendance/attendance_edit.html',{'item':attendance,'employee':employee,'tm':target_month,'ty':target_year})
 
                     
-                        
+
+                            
+                            
 
 
 
 
+            
+            
         
-        
-    
 
 
 

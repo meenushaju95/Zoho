@@ -18,7 +18,7 @@
 
 
 .custom-table {
-        width: 80%; /* Adjust the width as needed */
+        width: 100%; /* Adjust the width as needed */
         margin: 0 auto; /* Center the table horizontally */
     }
     .orange-link {
@@ -108,9 +108,15 @@
         <div class="container-fluid bg-black" style="padding: 20px;">
            
           <div class="row">
-            <div class="col-md-9"></div>
+            <div class="col-md-9"> {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success" role="alert" style="color: orange;background-color: black;border: none;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}</div>
             <div class="col-md-3">
-                <a href="" class="btn orange-link " id="download-btn" onclick="generatePDF()">pdf</a>
+                <a href="{% url 'attendance_pdf' employee.id tm target_year %}" class="btn orange-link ">pdf</a>
                 <a href="" class="btn orange-link" onclick="printData()">print</a>
                 <button type="button" class="btn orange-link  dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     share
@@ -118,7 +124,7 @@
                 <div class="dropdown-menu dropdown-menu-right">
                  
                   <button class="dropdown-item" type="button" id="whatsapp" onclick="shareViaWhatsApp()">whatsapp</button>
-                  <button class="dropdown-item" type="button" id="mail">Mail</button>
+                  <button class="dropdown-item" type="button" id="mail" data-toggle="modal" data-target="#shareToEmail">Mail</button>
                 </div>
             </div>
           </div>
@@ -129,13 +135,14 @@
             <h5 style="text-align: center;color: white;">Working Days: {{ working_days }} | Holidays : {{holiday_count}} | Leave : {{leave_count}}</h5>
          </div>
         <div class=" row justify-content-center">
+            <div class="table-content">
             <table class="table mt-5 custom-table ">
                 <thead >
                     <tr  >
                         <th scope="col" style="color: white;" >Date</th>
                         <th scope="col" style="color: white;">Status</th>
                         <th scope="col" style="color: white;">Reason</th>
-                        <th scope="col" style="color: white;" class="btn-g">Action</th>
+                        <th scope="col" class="btn-g" style="color: white;" class="btn-g">Action</th>
                     </tr>
                 </thead>
                 <tbody style="padding-top:20px;">
@@ -144,10 +151,10 @@
                         <td style="color: white;font-size: 16px;">{{ item.date|date }}</td>
                         <td style="color: white;font-size: 16px;">{{ item.status }}</td>
                         <td style="color: white;font-size: 16px;">{{ item.reason }}</td>
-                        <td>
-                            <div class="btn-group">
-                            <a href="#" class="btn btn-add btn-g">Edit</a>
-                            <a href="#" class="btn btn-add btn-g">Delete</a>
+                        <td class=" btn-g">
+                            <div class="btn-group btn-g ">
+                            <a href="{% url 'attendance_edit' item.id %}" class="btn btn-add" >Edit</a>
+                            <a href="#" class="btn btn-add " >Delete</a>
                         </div>
                         </td>
                     </tr>
@@ -160,74 +167,169 @@
             </table>
         </div>
         </div>
-
-
-        
-        <script>
-            
-        
-            function printData() {
-    // Remove links with the class 'btn-g' before printing
-    var noPrintLinks = document.querySelectorAll('.btn-g');
-    noPrintLinks.forEach(function(link) {
-        link.style.display = 'none';
-    });
-
-    var headings = document.querySelectorAll('.row h4, .row h5');
-    headings.forEach(function(heading) {
-        heading.style.fontSize = '30px'
-        heading.style.color = 'black';
-    });
-    var heading = document.querySelectorAll(' .row h5');
-    heading.forEach(function(heading) {
-        heading.style.fontSize = '25px'
-        heading.style.color = 'black';
-    });
-
-
-    // Change font color for table cells
-    var tableCells = document.querySelectorAll('.custom-table td, .custom-table th');
-    tableCells.forEach(function(cell) {
-        cell.style.color = 'black';
-        cell.style.fontSize = '30px';
-        cell.style.padding = '10px';
-        
-    });
-    var table = document.querySelector('.custom-table');
-table.style.margin = '0 auto';
-
-    // Open a new window for printing
-    var printWindow = window.open('', '_blank');
-    var printContent = document.getElementById('download-container').innerHTML;
-    printWindow.document.write('<html><head><title>Print</title></head><body>' + printContent + '</body></html>');
-    printWindow.document.close();
-
-    // Print the content
-    printWindow.print();
-    printWindow.onafterprint = function() {
-        // Restore the display property of links after printing
-        noPrintLinks.forEach(function(link) {
-            link.style.display = '';
-        });
-
-        // Reset font color for table cells
-        tableCells.forEach(function(cell) {
-            cell.style.color = '';
-        });
-
-        printWindow.close();
-    };
-}
-
-        </script>
+        </div>
         <script>
             function shareViaWhatsApp() {
-    var currentURL = window.location.href;
-    var whatsappURL = "https://api.whatsapp.com/send?text=" + encodeURIComponent(currentURL);
-    window.open(whatsappURL, "_blank");
-}
+                // Get the current page URL
+                var url = window.location.href;
+                
+                // Construct the WhatsApp share URL with the page URL as the text
+                var whatsappUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(url);
+                
+                // Open the WhatsApp share URL in a new window
+                window.open(whatsappUrl, "_blank");
+            }
         </script>
-       
+
+
+        
+<script>
+    function addTableBorders() {
+    var tableCells = document.querySelectorAll('.table-content td, .table-content th');
+    tableCells.forEach(function(cell) {
+        
+            cell.style.border = '1px solid black'; // Add border style
+            cell.style.padding = '10px'; // Adjust padding as needed
+           
+        
+    });
+    var excludedButtons = document.querySelectorAll('.btn-group.btn-g a');
+    excludedButtons.forEach(function(button) {
+        button.style.border = 'none';
+    });
+}
+
+    function printData() {
+        // Call function to add borders before printing
+        addTableBorders();
+
+        // Remove links with the class 'btn-g' before printing
+        var noPrintLinks = document.querySelectorAll('.btn-g');
+        noPrintLinks.forEach(function(link) {
+            link.style.display = 'none';
+        });
+
+        var headings = document.querySelectorAll('.row h4, .row h5');
+        headings.forEach(function(heading) {
+            heading.style.fontSize = '30px';
+            heading.style.color = 'black';
+        });
+        
+        // Change font color and add padding for table cells
+        var tableCells = document.querySelectorAll('.custom-table td, .custom-table th');
+        tableCells.forEach(function(cell) {
+            cell.style.color = 'black';
+            cell.style.fontSize = '30px';
+            cell.style.paddingLeft = '20px';
+        });
+
+        // Add padding to th elements
+        var tableHeaders = document.querySelectorAll('.custom-table th');
+        tableHeaders.forEach(function(header) {
+            header.style.padding = '30px'; // Adjust the padding value as needed
+        });
+
+        var table = document.querySelector('.custom-table');
+        table.style.margin = '0 auto';
+
+        // Open a new window for printing
+        var printWindow = window.open('', '_blank');
+        var printContent = document.getElementById('download-container').innerHTML;
+        printWindow.document.write('<html><head><title>Print</title></head><body>' + printContent + '</body></html>');
+        printWindow.document.close();
+
+        // Print the content
+        printWindow.print();
+        printWindow.onafterprint = function() {
+            // Restore the display property of links after printing
+            noPrintLinks.forEach(function(link) {
+                link.style.display = '';
+            });
+
+            // Reset font color for table cells
+            tableCells.forEach(function(cell) {
+                cell.style.color = '';
+            });
+
+            // Call function to remove table borders after printing
+            removeTableBorders();
+
+            printWindow.close();
+        };
+    }
+
+    function removeTableBorders() {
+        var tableCells = document.querySelectorAll('.custom-table th, .custom-table td');
+        tableCells.forEach(function(cell) {
+            cell.style.border = ''; // Remove border style
+            cell.style.padding = ''; // Reset padding
+        });
+    }
+</script>
+
+<div class="modal fade" id="shareToEmail" tabindex="-1" aria-labelledby="shareToEmailLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content bg-dark" >
+        <div class="modal-header" style="border-bottom: 1px solid #ffffff;">
+          <h5 class="modal-title text-white" id="shareToEmailLabel">Share Via Email</h5>
+          <button type="button" class="text-white btn" data-bs-dismiss="modal" aria-label=""><i class="fa fa-close text-white m-0"></i></button>
+        </div>
+        <div class="modal-body">
+          <form action="{% url 'attendance_email' employee.id tm target_year  %}" method="post" class="needs-validation" id="share_to_email_form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="emailIds" style="color: white;">Email IDs</label>
+                <textarea class="form-control"  name="email_ids" id="emailIds" rows="3" style="height: 100px;color: white;" placeholder="Multiple emails can be added by separating with a comma(,)." required></textarea>
+            </div>
+            <div class="form-group mt-2">
+                <label for="item_unitname" style="color: white;">Message(optional)</label>
+                <textarea name="email_message" id="email_message" class="form-control " cols="" rows="4" style="height: 100px;color: white;" placeholder="This message will be sent along with Attendance details."></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer d-flex justify-content-center" style="border-top: 1px solid #ffffff;">
+          <button type="submit" id="share_with_email" class="submitShareEmailBtn btn btn-outline-warning w-50 text-uppercase">SEND MAIL</button>
+        </div>
+      </div>
+    </div>
+</div>
+<script>
+      $(document).ready(function(){
+        $('#share_with_email').on('click',function(){
+            var emailsInput = document.getElementById('emailIds');
+            var emailsString = emailsInput.value.trim();
+
+            var emails = emailsString.split(',').map(function(email) {
+                return email.trim();
+            });
+
+            var emailRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+
+            var invalidEmails = []
+            if(emailsString == ""){
+                alert('Enter valid email addresses..')
+            }
+            else{
+                for (var i = 0; i < emails.length; i++) {
+                    var currentEmail = emails[i];
+
+                    if (currentEmail!="" && !emailRegex.test(currentEmail)) {
+                        console.log(currentEmail + ' is invalid!');
+                        invalidEmails.push(currentEmail)
+                    }
+                }
+                
+                if(invalidEmails.length > 0){
+                    alert('Invalid emails..Please check!\n'+invalidEmails)
+                    // alert(invalidEmails)
+                }else{
+                    $('#share_to_email_form').submit();
+                }
+            }
+        })
+    });
+</script>
+        
           
   </div>
 </body>

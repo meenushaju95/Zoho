@@ -284,7 +284,7 @@
 
             <div class="col-md-5 mt-5">
               <a href="" class="orange-link comment-link" data-toggle="modal" data-target="#commentModal" ><i class="fas fa-comment"></i></a>
-              <a href="" class="orange-link"><i class="fas fa-history"></i></a>
+              <a href="" class="orange-link" data-toggle="modal" data-target="#historyModal"><i class="fas fa-history"></i></a>
               <a href="" class="orange-link"><i class="fas fa-times"></i></a>
           </div>
 
@@ -420,6 +420,62 @@
           <button type="button" class="btn" data-dismiss="modal" style="background-color: orange;color: white;">Close</button>
           
           <button type="submit" class="btn" style="background-color: orange;color: white;">Save</button>
+        </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+
+  <div class="modal fade"  id="historyModal" tabindex="-1" role="dialog" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content bg-dark">
+        <div class="modal-header">
+          <h5 class="modal-title" id="commentModalLabel" style="color: white;">Attendance history</h5>
+          
+            
+        </div>
+        <div class="modal-body">
+           
+          <table class="table mt-3 bg-black">
+            <thead>
+              <tr>
+                <th scope="col" style="color: white;">Sl No</th>
+                <th scope="col" style="color: white;">Date</th>
+                <th scope="col" style="color: white;">Action</th>
+                <th scope="col" style="color: white;">By</th>
+              </tr>
+            </thead>
+            <tbody>
+                
+             
+              {% for history in history %}
+              <tr >
+                <td style="color: white;font-size: 16px;">{{ forloop.counter }}</td>
+                <td style="color: white;font-size: 16px;">{{ history.date|date }}</td>
+                <td style="color: white;font-size: 16px;">{{ history.action }}</td>
+                <td style="color: white;font-size: 16px;">{{ history.login_details.first_name }} {{ history.login_details.last_name }}</td>
+                
+                
+              </tr>
+              {% empty %}
+             
+              <tr>
+                <td colspan="3" class="text-center">No history found</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer">
+          
+          <button type="button" class="btn" data-dismiss="modal" style="background-color: orange;color: white;">Close</button>
+          
+          
         </form>
         </div>
       </div>

@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect,HttpResponse
+from django.shortcuts import render,redirect,HttpResponse,reverse
 from Register_Login.models import *
 from Register_Login.views import logout
 from django.contrib import messages
@@ -7,7 +7,7 @@ from datetime import date
 from datetime import datetime, timedelta
 from .models import payroll_employee,Attendance,Attendance_History,Holiday,Attendance_comment
 from django.shortcuts import get_object_or_404
-from datetime import datetime,timedelta
+
 from calendar import monthrange
 from collections import defaultdict
 from django.db.models import Q
@@ -545,6 +545,21 @@ def company_attendance_list(request):
              
 
         consolidated_entries = defaultdict(list)
+        MONTH_NAMES = {
+                    1: 'January',
+                    2: 'February',
+                    3: 'March',
+                    4: 'April',
+                    5: 'May',
+                    6: 'June',
+                    7: 'July',
+                    8: 'August',
+                    9: 'September',
+                    10: 'October',
+                    11: 'November',
+                    12: 'December'
+                }
+
 
         for item in items:
             target_month = item.date.month
@@ -565,21 +580,7 @@ def company_attendance_list(request):
             if existing_entry:
                 existing_entry['leave'] += leave_count
             else:
-                MONTH_NAMES = {
-                    1: 'January',
-                    2: 'February',
-                    3: 'March',
-                    4: 'April',
-                    5: 'May',
-                    6: 'June',
-                    7: 'July',
-                    8: 'August',
-                    9: 'September',
-                    10: 'October',
-                    11: 'November',
-                    12: 'December'
-                }
-
+               
                 entry = {
                     'employee': item.employee,
                     'target_month': target_month,
@@ -661,8 +662,10 @@ def add_attendance(request):
                 attendance.status = status
                 attendance.reason = reason
            
-                attendance.save()
-
+                
+            history=Attendance_History(company=company,login_details=log_details,attendance=attendance,date=date,action='Created')
+            history.save()
+            attendance.save()
             messages.success(request, 'Leave Marked')
             return redirect('company_mark_attendance')
 
@@ -674,6 +677,11 @@ def attendance_calendar(request, employee_id, target_year, target_month):
        
     }
     comment = Attendance_comment.objects.filter(month=target_month,year=target_year,employee=employee_id)
+    history = Attendance_History.objects.filter(date__month=target_month,date__year=target_year,attendance__employee=employee_id)
+    
+# Sort the combined list based on the date of the history or attendance entry
+    
+
     employee_attendance = Attendance.objects.filter(
         employee_id=employee_id,
         date__year=target_year,
@@ -711,6 +719,8 @@ def attendance_calendar(request, employee_id, target_year, target_month):
         elif log_details.user_type == 'Company':
             company = CompanyDetails.objects.get(login_details=log_details)
             items = Attendance.objects.filter(company=company)
+
+        
              
 
         consolidated_entries = defaultdict(list)
@@ -770,7 +780,7 @@ def attendance_calendar(request, employee_id, target_year, target_month):
                 all_entries.append(entry)
    
     
-    return render(request, 'Attendance/attendance_calendar.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries,'employee':employee,'comments':comment,'calendar_data':calendar_data})
+    return render(request, 'Attendance/attendance_calendar.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries,'employee':employee,'comments':comment,'calendar_data':calendar_data,'history':history})
 
 def add_comment(request):
     if request.method == 'POST':
@@ -821,11 +831,11 @@ def attendance_overview(request, employee_id, target_month, target_year):
 
         if log_details.user_type == 'Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
-            items = Attendance.objects.filter(company=staff.company,date__month=target_month,date__year=target_year)
+            items = Attendance.objects.filter(company=staff.company,date__month=target_month,date__year=target_year,employee=employee)
                 
         elif log_details.user_type == 'Company':
             company = CompanyDetails.objects.get(login_details=log_details)
-            items = Attendance.objects.filter(company=company,employee=employee,date__month=target_month,date__year=target_year)
+            items = Attendance.objects.filter(company=company,date__month=target_month,date__year=target_year,employee=employee)
        
         
         target_month = max(1, min(target_month, 12))
@@ -1045,7 +1055,7 @@ def attendance_email(request,employee_id,target_month,target_year):
                 messages.error(request, f'{e}')
                 return redirect(attendance_overview,employee_id,target_month,target_year)
         
-def attendance_edit(request,item_id):
+def attendance_edit(request,id):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
         if 'login_id' not in request.session:
@@ -1060,15 +1070,61 @@ def attendance_edit(request,item_id):
             
             employee = payroll_employee.objects.filter(company=staff.company,status='Active')
             
-        attendance=Attendance.objects.get(id=item_id)
+        attendance=Attendance.objects.get(id=id)
         target_month = attendance.date.month
         target_year = attendance.date.year
         return render(request,'attendance/attendance_edit.html',{'item':attendance,'employee':employee,'tm':target_month,'ty':target_year})
+def edit_attendance(request,id):
+    if request.method =='POST':
+        if 'login_id' in request.session:
+            log_id = request.session['login_id']
+            if 'login_id' not in request.session:
+                return redirect('/')
+            log_details = LoginDetails.objects.get(id=log_id)
+        
+            if log_details.user_type == 'Staff':
+                staff = StaffDetails.objects.get(login_details=log_details)
+                company = staff.company
+                
+            
+            elif log_details.user_type == 'Company':
+                company = CompanyDetails.objects.get(login_details=log_details)
+            
+            
+            ename = request.POST['employee']
+            emp = payroll_employee.objects.get(id=ename)
+            date = request.POST['date']
+            status = request.POST['status']
+            reason = request.POST['reason']
+            attendance = get_object_or_404(Attendance, id=id)
+            attendance.employee=emp
+            attendance.date=date
+            attendance.status=status
+            attendance.reason=reason
+            is_holiday = Holiday.objects.filter(company=company, start_date__lte=date, end_date__gte=date).exists()
 
-                    
+            if is_holiday:
+                    messages.warning(request, 'Selected date is a company holiday.')
+                    return redirect('attendance_edit',id=id)
+                
+            attendance.save()
+                
+            history = Attendance_History(company=company,login_details=log_details,attendance=attendance,date=date,action='Edited')
+            history.save()
+            messages.success(request,'Leave edited successfully!!')
+            return redirect('attendance_edit',id)
+        
+def attendance_delete(request,id):
+    item = Attendance.objects.get(id=id)
+    employee_id = item.employee.id
+    target_month = item.date.month
+    target_year = item.date.year
+    item.delete()
+    return redirect('attendance_overview',employee_id,target_month,target_year)
+                        
 
-                            
-                            
+                                
+                                
 
 
 

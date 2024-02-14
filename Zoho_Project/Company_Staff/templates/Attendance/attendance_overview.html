@@ -154,7 +154,7 @@
                         <td class=" btn-g">
                             <div class="btn-group btn-g ">
                             <a href="{% url 'attendance_edit' item.id %}" class="btn btn-add" >Edit</a>
-                            <a href="#" class="btn btn-add " >Delete</a>
+                            <a href="{% url 'attendance_delete' item.id  %}" class="btn btn-add " >Delete</a>
                         </div>
                         </td>
                     </tr>

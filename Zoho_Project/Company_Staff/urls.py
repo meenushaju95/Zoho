@@ -30,9 +30,9 @@ urlpatterns = [
     path('attendance_overview/<int:employee_id>/<int:target_month>/<int:target_year>/',views.attendance_overview,name='attendance_overview'),
     path('attendance_pdf/<int:employee_id>/<int:target_month>/<int:target_year>',views.attendance_pdf,name='attendance_pdf'),
     path('attendance_email/<int:employee_id>/<int:target_month>/<int:target_year>',views.attendance_email,name='attendance_email'),
-    path('attendance_edit/<int:item_id>',views.attendance_edit,name='attendance_edit'),
-
-
+    path('attendance_edit/<int:id>',views.attendance_edit,name='attendance_edit'),
+    path('edit_attendance/<int:id>',views.edit_attendance,name='edit_attendance'),
+    path('attendance_delete/<int:id>',views.attendance_delete,name='attendance_delete'),
     # -------------------------------Staff section--------------------------------
     path('Staff/Dashboard',views.staff_dashboard,name='staff_dashboard'),
     path('Staff/Profile',views.staff_profile,name='staff_profile'),

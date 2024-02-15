@@ -81,6 +81,9 @@ class Attendance_comment(models.Model):
     month = models.IntegerField(null=True)  
     year = models.IntegerField(null=True)  
 
+class Bloodgroup(models.Model):
+    Blood_group=models.CharField(max_length=255,null=True)
+
 
 
 

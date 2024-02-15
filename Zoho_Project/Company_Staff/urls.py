@@ -33,6 +33,8 @@ urlpatterns = [
     path('attendance_edit/<int:id>',views.attendance_edit,name='attendance_edit'),
     path('edit_attendance/<int:id>',views.edit_attendance,name='edit_attendance'),
     path('attendance_delete/<int:id>',views.attendance_delete,name='attendance_delete'),
+    path('attendance_add_blood',views.attendance_add_blood,name='attendance_add_blood'),
+    path('attendance_create_employee',views.attendance_create_employee,name='attendance_create_employee'),
     # -------------------------------Staff section--------------------------------
     path('Staff/Dashboard',views.staff_dashboard,name='staff_dashboard'),
     path('Staff/Profile',views.staff_profile,name='staff_profile'),

@@ -12,6 +12,11 @@
 
 
 <style>
+ 
+ .fc-daygrid-day-top .fc-daygrid-day-number,
+  .fc-daygrid-day-top .fc-daygrid-day-label {
+    color: black !important; /* Change the color to black */
+  }
  .white-border {
         border-right: 1px solid white;
     }
@@ -75,7 +80,7 @@
       <div class="container-fluid bg-black" style="padding: 20px;">
       <div class="row">
        
-          <div class="col-md-6 white-border">
+          <div class="col-md-4 white-border">
             <div class="row">
               <div class="col-md-2 ">
                 <div class="input-group mt-5">
@@ -116,9 +121,7 @@
                                       <th scope="col"><b>Staff Name</b></th>
                                       <th scope="col"><b>Month</b></th>
                                       <th scope="col"><b>Year</b></th>
-                                      <th scope="col"><b>Working Days</b></th>
-                                     
-                                      <th scope="col"><b>Total Leave</b></th>
+                                      
                                   </tr>
                               </thead>
                               <tbody>
@@ -130,9 +133,7 @@
                                           <td>{{ entry.employee.first_name }} {{ entry.employee.last_name }}</td>
                                           <td>{{ entry.target_month_name }}</td>
                                           <td>{{ entry.target_year }}</td>
-                                          <td>{{ entry.work_days }}</td>
-                                          
-                                          <td>{{ entry.total_leave }}</td>
+                                         
                                       </tr>
                                   {% endfor %}
                               </tbody>
@@ -275,7 +276,7 @@
                   </div>
               </div>
           </div>
-          <div class="col-md-6 "  >
+          <div class="col-md-8 "  >
             <div class="row">
               <div class="col-md-3 mt-5">
                 <a href="{% url 'attendance_overview' calendar_data.employee_id calendar_data.target_month calendar_data.target_year %}" class="orange-link" style="background-color: orange;color: white;"><i class="fas fa-eye"></i> overview</a>
@@ -285,7 +286,7 @@
             <div class="col-md-5 mt-5">
               <a href="" class="orange-link comment-link" data-toggle="modal" data-target="#commentModal" ><i class="fas fa-comment"></i></a>
               <a href="" class="orange-link" data-toggle="modal" data-target="#historyModal"><i class="fas fa-history"></i></a>
-              <a href="" class="orange-link"><i class="fas fa-times"></i></a>
+              <a href="{% url 'company_attendance_list' %}" class="orange-link"><i class="fas fa-times"></i></a>
           </div>
 
            
@@ -302,7 +303,7 @@
            
            
            
-              <div id='calendar' style="background-color:black;"></div>
+              <div id='calendar' style="background-color:white;padding: 25px;"></div>
             
           </div>
       </div> 
@@ -314,6 +315,7 @@
       var calendarEl = document.getElementById('calendar');
       var calendar = new FullCalendar.Calendar(calendarEl, {
           initialView: 'dayGridMonth',
+         
           events: [
               // Employee Attendance Events
               {% for entry in emp_attendance %}
@@ -333,8 +335,11 @@
                       allDay: true,
                       color: 'red', // Color for holidays
                   },
+                  
+    
               {% endfor %}
           ],
+          
           eventContent: function(arg) {
               var eventElement = document.createElement('div');
               eventElement.innerHTML = arg.event.title;
@@ -345,6 +350,12 @@
               eventElement.style.marginLeft = '0px';
               return { domNodes: [eventElement] };
           },
+          eventDidMount: function(info) {
+              var dayNameElements = info.el.querySelectorAll('.fc-daygrid-day-top .fc-daygrid-day-label'); // Find all day name elements
+              dayNameElements.forEach(function(dayNameElement) {
+                  dayNameElement.style.color = 'black'; // Change the color of each day name to black
+              });
+          }
           
       });
 
@@ -383,7 +394,7 @@
                 <input type="hidden"  name="employee" value="{{calendar_data.employee_id}}">
                 <input type="hidden" name="target_month" value="{{ calendar_data.target_month }}">
                 <input type="hidden"  name="target_year" value="{{ calendar_data.target_year }}">
-          <textarea id="commentText" name="comment" class="form-control" rows="4" placeholder="Add Comments here" style="color: white;font-size: 16px;"></textarea>
+          <textarea id="commentText" name="comment" class="form-control" rows="4" placeholder="Add Comments here" style="color: white;font-size: 16px;" required></textarea>
          
           
           <table class="table mt-3">

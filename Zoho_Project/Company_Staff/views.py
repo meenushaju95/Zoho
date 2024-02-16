@@ -17,6 +17,8 @@ from xhtml2pdf import pisa
 from django.core.mail import EmailMessage
 from io import BytesIO
 import os
+import openpyxl 
+
 
 
 
@@ -538,10 +540,12 @@ def company_attendance_list(request):
         if log_details.user_type == 'Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
             items = Attendance.objects.filter(company=staff.company)
+            allmodules= ZohoModules.objects.get(company=staff.company,status='New')
                 
         elif log_details.user_type == 'Company':
             company = CompanyDetails.objects.get(login_details=log_details)
             items = Attendance.objects.filter(company=company)
+            allmodules= ZohoModules.objects.get(company=company,status='New')
              
 
         consolidated_entries = defaultdict(list)
@@ -606,7 +610,8 @@ def company_attendance_list(request):
 
         return render(request, 'Attendance/company_attendance_list.html', {
             'all_entries': all_entries,
-            'month_name': MONTH_NAMES
+            'month_name': MONTH_NAMES,
+            'allmodules': allmodules
         })
             
 def company_mark_attendance(request):
@@ -616,16 +621,18 @@ def company_mark_attendance(request):
             return redirect('/')
         log_details = LoginDetails.objects.get(id=log_id)
         if log_details.user_type == 'Company':
-            
+            company = CompanyDetails.objects.get(login_details=log_details)
             employee = payroll_employee.objects.filter(login_details=log_details,status='Active')
+            allmodules= ZohoModules.objects.get(company=company)
             bloods=Bloodgroup.objects.all
-            return render(request,'Attendance/company_mark_attendance.html',{'staffs':employee,'blood':bloods})
+            return render(request,'Attendance/company_mark_attendance.html',{'staffs':employee,'blood':bloods,'allmodules':allmodules})
         if log_details.user_type=='Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
             
             employee = payroll_employee.objects.filter(company=staff.company,status='Active')
+            allmodules= ZohoModules.objects.get(company=staff.company)
             bloods = Bloodgroup.objects.all()
-            return render(request,'Attendance/company_mark_attendance.html',{'staffs':employee,'blood':bloods})
+            return render(request,'Attendance/company_mark_attendance.html',{'staffs':employee,'blood':bloods,'allmodules':allmodules})
         
 def add_attendance(request):
         if request.method == 'POST':
@@ -706,7 +713,10 @@ def attendance_calendar(request, employee_id, target_year, target_month):
     (Q(start_date__lte=end_date) & Q(end_date__gte=start_date)))  # Holidays overlapping the target month
     
 )   
-   
+    for holiday in holidays:
+        holiday.end_date += timedelta(days=1)
+    
+    
     # for getting atendance list
     if 'login_id' in request.session:
         log_id = request.session['login_id']
@@ -717,10 +727,13 @@ def attendance_calendar(request, employee_id, target_year, target_month):
         if log_details.user_type == 'Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
             items = Attendance.objects.filter(company=staff.company)
+            
+            allmodules= ZohoModules.objects.get(company=staff.company,status='New')
                 
         elif log_details.user_type == 'Company':
             company = CompanyDetails.objects.get(login_details=log_details)
             items = Attendance.objects.filter(company=company)
+            allmodules= ZohoModules.objects.get(company=company,status='New')
 
         
              
@@ -780,9 +793,10 @@ def attendance_calendar(request, employee_id, target_year, target_month):
             for entry in entries:
                 
                 all_entries.append(entry)
+    
    
     
-    return render(request, 'Attendance/attendance_calendar.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries,'employee':employee,'comments':comment,'calendar_data':calendar_data,'history':history})
+    return render(request, 'Attendance/attendance_calendar.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries,'employee':employee,'comments':comment,'calendar_data':calendar_data,'history':history,'allmodules':allmodules})
 
 def add_comment(request):
     if request.method == 'POST':
@@ -834,11 +848,11 @@ def attendance_overview(request, employee_id, target_month, target_year):
         if log_details.user_type == 'Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
             items = Attendance.objects.filter(company=staff.company,date__month=target_month,date__year=target_year,employee=employee)
-                
+            allmodules= ZohoModules.objects.get(company=staff.company)    
         elif log_details.user_type == 'Company':
             company = CompanyDetails.objects.get(login_details=log_details)
             items = Attendance.objects.filter(company=company,date__month=target_month,date__year=target_year,employee=employee)
-       
+            allmodules= ZohoModules.objects.get(company=company) 
         
         target_month = max(1, min(target_month, 12))
         target_month = int(target_month)
@@ -882,7 +896,7 @@ def attendance_overview(request, employee_id, target_month, target_year):
     # Calculate the working days
         working_days = len(days_in_month) - leave_count - holiday_count
 
-        return render(request,'attendance/attendance_overview.html',{'current_url': current_url,'items':items,'employee': employee,'tm':target_month,'target_month': target_month_name,'target_year': target_year,'leave_count': leave_count,'holiday_count': holiday_count,'working_days': working_days})
+        return render(request,'attendance/attendance_overview.html',{'current_url': current_url,'items':items,'employee': employee,'tm':target_month,'target_month': target_month_name,'target_year': target_year,'leave_count': leave_count,'holiday_count': holiday_count,'working_days': working_days,'allmodules':allmodules})
 def attendance_pdf(request,employee_id,target_month,target_year) :
     if 'login_id' in request.session:
         log_id = request.session['login_id']
@@ -1064,18 +1078,21 @@ def attendance_edit(request,id):
             return redirect('/')
         log_details = LoginDetails.objects.get(id=log_id)
         if log_details.user_type == 'Company':
+            company=CompanyDetails.objects.get(login_details=log_details)
+            allmodules= ZohoModules.objects.get(company=company,status='New')
             
             employee = payroll_employee.objects.filter(login_details=log_details,status='Active')
             
         if log_details.user_type=='Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
+            allmodules=ZohoModules.objects.get(company=staff.company)
             
             employee = payroll_employee.objects.filter(company=staff.company,status='Active')
             
         attendance=Attendance.objects.get(id=id)
         target_month = attendance.date.month
         target_year = attendance.date.year
-        return render(request,'attendance/attendance_edit.html',{'item':attendance,'employee':employee,'tm':target_month,'ty':target_year})
+        return render(request,'attendance/attendance_edit.html',{'item':attendance,'employee':employee,'tm':target_month,'ty':target_year,'allmodules':allmodules})
 def edit_attendance(request,id):
     if request.method =='POST':
         if 'login_id' in request.session:
@@ -1222,6 +1239,52 @@ def attendance_add_blood(request):
         bld = Bloodgroup(Blood_group=blood)
         bld.save()
         return redirect(reverse('company_mark_attendance') + '#addEmployeemodal')
+    
+def attendance_import(request):
+     if request.method == 'POST' and 'file' in request.FILES:
+        if 'login_id' in request.session:
+            log_id = request.session['login_id']
+            if 'login_id' not in request.session:
+                return redirect('/')
+            log_details = LoginDetails.objects.get(id=log_id)
+
+            if log_details.user_type == 'Staff':
+                staff = StaffDetails.objects.get(login_details=log_details)
+                company=staff.company
+                    
+            elif log_details.user_type == 'Company':
+                company = CompanyDetails.objects.get(login_details=log_details)
+                
+                
+        excel_file = request.FILES['file']
+        workbook = openpyxl.load_workbook(excel_file)
+        sheet = workbook.active
+
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            empno ,date,status,reason= row
+            employee=payroll_employee.objects.get(emp_number=empno)
+            dates = datetime.strptime(dates, '%Y-%m-%d').date()
+            
+            
+           
+            Attendance.objects.create(
+                employee=employee,
+                company=company,
+                login_details=log_details,
+                date=dates,
+                status=status,
+                reason=reason)
+            
+        history=Attendance_History(company=company,login_details=log_details,attendance=Attendance,date=dates,action='Created')
+        history.save()
+            
+        return redirect('company_attendance_list')
+
+     return HttpResponse("No file uploaded or invalid request method")
+         
+           
+   
+
                         
 
                                 

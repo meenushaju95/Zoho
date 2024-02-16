@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load static %}
+{% load social_share %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -13,6 +14,9 @@
 <style>
   table tr td:hover {
   cursor: pointer;
+}
+ .custom-li {
+    color: black;
 }
 
 
@@ -118,16 +122,24 @@
             <div class="col-md-3">
                 <a href="{% url 'attendance_pdf' employee.id tm target_year %}" class="btn orange-link ">pdf</a>
                 <a href="" class="btn orange-link" onclick="printData()">print</a>
-                <button type="button" class="btn orange-link  dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    share
-                </button>
-                <div class="dropdown-menu dropdown-menu-right">
-                 
-                  <button class="dropdown-item" type="button" id="whatsapp" onclick="shareViaWhatsApp()">whatsapp</button>
-                  <button class="dropdown-item" type="button" id="mail" data-toggle="modal" data-target="#shareToEmail">Mail</button>
+                
+                
+                    <button type="button" class="btn orange-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Share
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <ul>
+                            <li class="dropdown-item custom-li" >{% post_to_whatsapp object_or_url 'WhatsApp' %}
+                               
+                            </li>
+                            <li >
+                                <a href="#" class="dropdown-item custom-li" data-toggle="modal"  data-target="#shareToEmail">Mail</a>
+                            </li>
+                        </ul>
+                  
                 </div>
-            </div>
           </div>
+          
           <div id="download-container">
          <div class="row mt-5">
             <h4 style="text-align: center;color: white;">Attendance for {{ employee.first_name }} {{ employee.last_name }} - {{ target_month }}/{{ target_year }}</h4>

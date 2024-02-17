@@ -18,6 +18,9 @@
  .custom-li {
     color: black;
 }
+.whatsapp-text{
+    color: black;
+}
 
 
 
@@ -127,12 +130,14 @@
                     <button type="button" class="btn orange-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Share
                     </button>
-                    <div class="dropdown-menu dropdown-menu-right">
+                    <div class="dropdown-menu dropdown-menu-right" style="background-color: gray;">
                         <ul>
-                            <li class="dropdown-item custom-li" >{% post_to_whatsapp object_or_url 'WhatsApp' %}
-                               
+                            <li class="dropdown-item custom-li">
+                                <span class="whatsapp-text">
+                                    {% post_to_whatsapp object_or_url 'WhatsApp'  %}
+                                </span>
                             </li>
-                            <li >
+                            <li style="color: black;">
                                 <a href="#" class="dropdown-item custom-li" data-toggle="modal"  data-target="#shareToEmail">Mail</a>
                             </li>
                         </ul>

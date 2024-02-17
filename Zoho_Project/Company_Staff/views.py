@@ -7,6 +7,7 @@ from datetime import date
 from datetime import datetime, timedelta
 from .models import payroll_employee,Attendance,Attendance_History,Holiday,Attendance_comment,Bloodgroup
 from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
 
 from calendar import monthrange
 from collections import defaultdict
@@ -1234,14 +1235,14 @@ def attendance_create_employee(request):
                 return redirect('company_mark_attendance')
             
 def attendance_add_blood(request):
-    if request.method =='POST':
-        blood = request.POST['blood']
-        bld = Bloodgroup(Blood_group=blood)
-        bld.save()
-        return redirect(reverse('company_mark_attendance') + '#addEmployeemodal')
+     if request.method == "POST":
+        blood = request.POST.get('blood')
+        Bloodgroup.objects.create(Blood_group=blood)
+        return JsonResponse({ 'blood': blood})
+     return render(request,'company_mark_attendance.html') 
     
 def attendance_import(request):
-     if request.method == 'POST' and 'file' in request.FILES:
+    if request.method == 'POST' and 'file' in request.FILES:
         if 'login_id' in request.session:
             log_id = request.session['login_id']
             if 'login_id' not in request.session:
@@ -1250,40 +1251,48 @@ def attendance_import(request):
 
             if log_details.user_type == 'Staff':
                 staff = StaffDetails.objects.get(login_details=log_details)
-                company=staff.company
+                company = staff.company
                     
             elif log_details.user_type == 'Company':
                 company = CompanyDetails.objects.get(login_details=log_details)
-                
-                
-        excel_file = request.FILES['file']
-        workbook = openpyxl.load_workbook(excel_file)
-        sheet = workbook.active
 
-        for row in sheet.iter_rows(min_row=2, values_only=True):
-            empno ,date,status,reason= row
-            employee=payroll_employee.objects.get(emp_number=empno)
-            dates = datetime.strptime(dates, '%Y-%m-%d').date()
-            
-            
-           
-            Attendance.objects.create(
-                employee=employee,
-                company=company,
-                login_details=log_details,
-                date=dates,
-                status=status,
-                reason=reason)
-            
-        history=Attendance_History(company=company,login_details=log_details,attendance=Attendance,date=dates,action='Created')
-        history.save()
-            
-        return redirect('company_attendance_list')
+            excel_file = request.FILES['file']
+            workbook = openpyxl.load_workbook(excel_file)
+            sheet = workbook.active
 
-     return HttpResponse("No file uploaded or invalid request method")
-         
-           
-   
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                Employee,Employee_No, date, status, reason = row
+                
+                date_str = date.strftime('%Y-%m-%d')  # Convert datetime object to string
+                date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                
+                employees = payroll_employee.objects.filter(emp_number=Employee_No)
+
+                    
+                    
+                for employee in employees:
+                        attendance = Attendance.objects.create(
+                            employee=employee,
+                            company=company,
+                            login_details=log_details,
+                            date=date,
+                            status=status,
+                            reason=reason
+                        )
+
+                       
+                        history = Attendance_History.objects.create(
+                            company=company,
+                            login_details=log_details,
+                            attendance=attendance,
+                            date=date,
+                            action='Created'
+                        )
+                
+            return redirect('company_attendance_list')
+
+    return HttpResponse("No file uploaded or invalid request method")
+                
 
                         
 

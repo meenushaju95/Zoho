@@ -92,10 +92,10 @@
                             <button type="button" class="btn orange-link mt-5 dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fa fa-sort" aria-hidden="true"></i>
                             </button>
-                            <div class="dropdown-menu dropdown-menu-right">
-                              <button class="dropdown-item" type="button" id="sortAll">All</button>
-                              <button class="dropdown-item" type="button" id="sortName">Employee Name</button>
-                              <button class="dropdown-item" type="button" id="sortMonth">Month</button>
+                            <div class="dropdown-menu dropdown-menu-right" style="background-color: gray;">
+                              <button class="dropdown-item" type="button" id="sortAll" style="color: black;">All</button>
+                              <button class="dropdown-item" type="button" id="sortName" style="color: black;">Employee Name</button>
+                              <button class="dropdown-item" type="button" id="sortMonth" style="color: black;">Month</button>
                             </div>
                           </div>
                     </div>
@@ -107,7 +107,7 @@
                         
                        
                    
-                        <a href="#" class="orange-link mt-5  "  id="importExcel" data-toggle="modal" data-target="#importModal">Import</a>
+                        <a href="#" class="orange-link mt-5  "  id="importExcel" data-toggle="modal" data-target="#importModal" onclick="excelmodel()">Import</a>
                         
                         <a href="#" class="orange-link mt-5  "  id="ExportExcel">Export</a>
                         <a href="{% url 'company_mark_attendance' %}"class="orange-link mt-5">New+</a>
@@ -115,6 +115,39 @@
                     </div>
                 </form>
                 </div>
+                <script>
+                    function excelmodel() {
+                        const table1 = document.querySelector('#attendancetablemodel');
+                        const ws1 = XLSX.utils.table_to_sheet(table1);
+                        const wb1 = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb1, ws1, 'Sheet1');
+                        XLSX.writeFile(wb1, 'Attendance_Details_Sample.xlsx');
+                    }
+                  </script>
+                  <table class="table table-hover" id="attendancetablemodel" hidden>
+                    <thead>
+          
+                        <tr>
+                            <th scope="col">Employee</th>
+                            <th scope="col">Employee_No</th>
+                            <th scope="col">date</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+          
+                        <tr>
+                            <td> </td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+          
+          
+                    </tbody>
+                </table>
 
                 <div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
                     <div class="modal-dialog" role="document">

@@ -169,7 +169,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                 <section>
                     <div class="container pl-5" style="color:white;">
                        
-                        <form method="POST" action="{% url 'attendance_create_employee' %}" enctype="multipart/form-data" id="myForm" >
+                        <form method="POST" action="" enctype="multipart/form-data" id="myForm" onsubmit="event.preventDefault(); saveEmployee();" >
                             {% csrf_token %}
                             <div class="row">
                                 <div class="data  col-md-6 ">
@@ -373,8 +373,12 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                                             </select>
                                             <a class="btn-outline-warning" href="" data-toggle="modal" data-target="#commentModal" data-toggle="tooltip" title="comment">
                                                 Add Blood group
-                                               </a>
+                                            </a>
                                         </div>
+
+                                       
+                                        
+                                        
                                         
                                     </div>
                                     <div class="row pb-3">
@@ -626,40 +630,91 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                             <hr>
                             <div class="action-button">
                                 <button class="btn text-light" type="submit" style="background-color: chocolate; width: 150px; font-size: medium;" onclick="validateform()">Add</button>
-                                <button class="btn btn-danger" type="reset" style="background-color: chocolate; width: 150px; font-size: medium;" onclick="goToTop()">Cancel</button>
+                                <button class="btn btn-danger" type="reset" style="background-color: chocolate; width: 150px; font-size: medium;" data-dismiss="modal" onclick="goToTop()">Cancel</button>
                             </div>
+
+                          
+                            
                         </form>
 
                          <!-- Modal -->
-                <div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"  aria-hidden="true" style="margin-top: 8vh;">
-                  <div class="modal-dialog" role="document">
-                    <div class="modal-content" style="background-color: #3b3b3b;">
-                      <div class="modal-header">
-                        <h3 class="modal-title text-light" id="exampleModalLabel">Add Blood group</h3>
-                        <button type="button" class="btn close" data-dismiss="modal" aria-label="Close">
-                          <span aria-hidden="true" style="font-size: x-large;">&times;</span>
-                        </button>
-                      </div>
-                      <form action="{% url 'attendance_add_blood' %}" method="POST" enctype="multipart/form-data"id="blood1"  >
-                        {% csrf_token %}
-                        <div class="modal-body">
-                          <input type="text" class="form-control text-light" name="blood" id="blood_form" title="Please enter uppercase letters">
+                         <div class="modal fade" id="commentModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"  aria-hidden="true" style="margin-top: 8vh;">
+                            <div class="modal-dialog" role="document">
+                              <div class="modal-content" style="background-color: #3b3b3b;">
+                                <div class="modal-header">
+                                  <h3 class="modal-title text-light" id="exampleModalLabel">Add Blood group</h3>
+                                  <button type="button" class="btn close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true" style="font-size: x-large;">&times;</span>
+                                  </button>
+                                </div>
+                                <form action="" method="POST" enctype="multipart/form-data" id="blood1"  >
+                                  {% csrf_token %}
+                                  <div class="modal-body">
+                                    <input type="text" class="form-control text-light" name="blood" id="blood_form" title="Please enter uppercase letters">
+                                  </div>
+                                  <div class="modal-footer">
+                                    <button type="button" class="btn btn-add" data-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-add" data-dismiss="modal" onclick="uploadBlood()">Save</button>
+                                  </div>
+                                </form>
+                              </div>
+                            </div>
                         </div>
-                        <div class="modal-footer">
-                          <button type="button" class="btn btn-outline-warning" data-dismiss="modal">Close</button>
-                          <button type="submit" class="btn btn-outline-warning" onclick="saveBloodGroup">Save</button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-
+                         
           </div>
-      </section>
-      </div>
-      </div>
-      </div>
-      <script>
+          <script>
+           
+            function saveEmployee() {
+                
+                var formData = new FormData(document.getElementById("myForm"));
+                
+                fetch("{% url 'attendance_create_employee' %}", {
+    method: "POST",
+    body: formData
+})
+.then(response => {
+    if (response.ok) {
+        alert("Employee saved successfully");
+    } else {
+        throw new Error("Failed to save employee");
+    }
+})
+.catch(error => {
+    console.error("Error saving employee:", error);
+    alert("An error occurred while saving employee. Please try again later.");
+});
+            }
+        </script>
+
+<script>
+    async function uploadBlood() {
+        const form = document.getElementById('blood1'); // Adjust the form ID if needed
+        const formData = new FormData(form);
+
+
+        
+       var response = await fetch('attendance_add_blood', {
+            method: 'POST',
+            body: formData
+        })
+        if(response.ok){
+            var result=await response.json()
+            console.log(result.message)
+            alert(result.message)
+            document.getElementById('blood1').reset();
+            var newOption = document.createElement("option");
+
+        // Set the value and text for the new option
+            newOption.value = result.blood;
+            newOption.text = result.blood;
+
+           
+            document.getElementById("blood").appendChild(newOption);
+        }
+    }
+</script>
+          <script>
+         
       var defaultDate = new Date();
 
 // Formatting the date to YYYY-MM-DD
@@ -668,35 +723,7 @@ var formattedDate = defaultDate.toISOString().split('T')[0];
 // Setting the value of the input field
 document.getElementById("joindate").value = formattedDate;
         </script>
-      <script>
-         function saveBloodGroup() {
-    // Get the form data
-    var formData = new FormData(document.getElementById("blood1"));
-
-    // Perform AJAX request to save the blood group
-    $.ajax({
-        url: "{% url 'attendance_add_blood' %}",  // Replace with your URL endpoint
-        method: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        success: function(response) {
-            // Optionally handle success response
-            console.log(response);
-            alert("Blood group saved successfully");
-            // Close the blood group modal
-            $('#commentModal').modal('hide');
-            
-            // Redirect to the mark leave page with the parent modal's fragment identifier
-            $('#addEmployeeModal').modal('show');
-        },
-        error: function(xhr, status, error) {
-            // Optionally handle error response
-            console.error(xhr.responseText);
-        }
-    });
-}
-      </script>
+      
      
       
       

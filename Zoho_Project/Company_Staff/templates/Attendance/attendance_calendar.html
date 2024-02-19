@@ -54,10 +54,11 @@
 }
 .search-input {
         padding: 5px;
+        background-color: white;
         border: 1px solid white;
         border-radius: 5px;
         font-size: 16px;
-        color: white;
+        color: black;
         flex-grow: 1; /* Grow to take remaining space */
     }
 
@@ -104,7 +105,7 @@
                 
             </div>
             <div class="col-md-7 mt-5">
-              <input type="text" id="searchInput" class="form-control" placeholder=" Search here.." >
+              <input type="text" id="searchInput" style="background-color: white;color: black;" class="form-control" placeholder=" Search here.." >
           </div>
             </div>
             <div class="row mt-5" style="margin-left: 10px;color: white;font-size: 23px;">Attendance</div>
@@ -389,7 +390,7 @@
             
         </div>
         <div class="modal-body">
-            <form method="post" action="{% url 'add_comment' %}" id="commentForm">
+            <form method="post" action="" id="commentForm">
                 {% csrf_token %}
                 <input type="hidden"  name="employee" value="{{calendar_data.employee_id}}">
                 <input type="hidden" name="target_month" value="{{ calendar_data.target_month }}">
@@ -414,7 +415,9 @@
                 
                 <td>
                  
-                  <a href="{% url 'delete_comment' comment.id %}" class="btn" ><i class="fa fa-trash" aria-hidden="true" style="color: white;"></i></a>
+                  <a href="#" class="btn delete-comment" data-id="{{ comment.id }}">
+                    <i class="fa fa-trash" aria-hidden="true" style="color: white;"></i>
+                </a>
                 </td>
               </tr>
               {% empty %}
@@ -430,12 +433,81 @@
           
           <button type="button" class="btn" data-dismiss="modal" style="background-color: orange;color: white;">Close</button>
           
-          <button type="submit" class="btn" style="background-color: orange;color: white;">Save</button>
+          <button type="submit" class="btn" style="background-color: orange;color: white;" onclick="saveComment()">Save</button>
         </form>
         </div>
       </div>
     </div>
   </div>
+
+  <script>
+    function saveComment() {
+    const form = document.getElementById('commentForm');
+    const formData = new FormData(form);
+
+    fetch("{% url 'attendance_add_comment' %}", {
+        method: "POST",
+        body: formData,
+        
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json(); // Parse the response body as JSON
+        } else {
+            throw new Error("Failed to save comment");
+        }
+    })
+    .then(data => {
+        // Check if the response contains a message
+        if (data.message) {
+            alert(data.message); // Display the message from the server
+            // Optionally, you can reload the page or update the comments section here
+        } else {
+            throw new Error("Invalid response from server");
+        }
+    })
+    .catch(error => {
+        console.error("Error saving comment:", error);
+        alert("An error occurred while saving comment. Please try again later.");
+    });    
+    
+    
+}
+
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const deleteLinks = document.querySelectorAll('.delete-comment');
+    deleteLinks.forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault(); // Prevent the default link behavior (navigating to a new page)
+
+            // Extract the comment ID from the data-id attribute
+            const commentId = link.dataset.id;
+
+            // Send an AJAX request to delete the comment
+            fetch("{% url 'attendance_delete_comment' 0 %}".replace('0', commentId), {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // If the comment is successfully deleted, remove it from the UI
+                    link.closest('tr').remove(); // Assuming the comment is in a table row
+                } else {
+                    throw new Error('Failed to delete comment');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting comment:', error);
+                alert('An error occurred while deleting comment. Please try again later.');
+            });
+        });
+    });
+});
+  </script>
 
 
 

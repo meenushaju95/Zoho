@@ -799,40 +799,44 @@ def attendance_calendar(request, employee_id, target_year, target_month):
     
     return render(request, 'Attendance/attendance_calendar.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries,'employee':employee,'comments':comment,'calendar_data':calendar_data,'history':history,'allmodules':allmodules})
 
-def add_comment(request):
+def attendance_add_comment(request):
     if request.method == 'POST':
-        if 'login_id' in request.session:
-            log_id = request.session['login_id']
-            if 'login_id' not in request.session:
-                return redirect('/')
-            log_details = LoginDetails.objects.get(id=log_id)
+        if 'login_id' not in request.session:
+            return JsonResponse({'error': 'User not logged in'}, status=401)
 
-            if log_details.user_type == 'Staff':
-                staff = StaffDetails.objects.get(login_details=log_details)
-                company = staff.company
-                    
-            elif log_details.user_type == 'Company':
-                company = CompanyDetails.objects.get(login_details=log_details)
-            
-            employe = request.POST['employee']
-            emp=payroll_employee.objects.get(id=employe)
-            
-            target_month = request.POST['target_month']
-            target_year = request.POST['target_year']
-            comment = request.POST.get('comment')
-            print(employe,target_month,target_year)
+        log_id = request.session['login_id']
+        log_details = LoginDetails.objects.get(id=log_id)
+
+        if log_details.user_type == 'Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            company = staff.company
+        elif log_details.user_type == 'Company':
+            company = CompanyDetails.objects.get(login_details=log_details)
+
+        employee_id = request.POST.get('employee')
+        employee = payroll_employee.objects.get(id=employee_id)
+        target_month = request.POST.get('target_month')
+        target_year = request.POST.get('target_year')
+        comment_text = request.POST.get('comment')
+
+        # Create the comment object
+        if comment_text:  # Check if comment text is provided
+            # Create the comment object
             comment = Attendance_comment(
-                comment=comment,
-                employee=emp,
+                comment=comment_text,
+                employee=employee,
                 month=target_month,
-                year=target_year, 
+                year=target_year,
                 company=company,
                 login_details=log_details
-               
             )
             comment.save()
-            return redirect('attendance_calendar', employee_id=employe, target_year=target_year, target_month=target_month)
-           
+
+            return JsonResponse({'message': 'Comment added successfully'})
+        else:
+            return JsonResponse({'error': 'Comment text is required'}, status=400)  # Return an error response if comment text is empty
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 def delete_attendance_comment(request,id):
     comment = Attendance_comment.objects.get(id=id)    
     comment.delete()  
@@ -1233,14 +1237,37 @@ def attendance_create_employee(request):
                 
                 messages.info(request,'employee created')
                 return redirect('company_mark_attendance')
+            elif log_details.user_type == 'Staff':
+                staff = StaffDetails.objects.get(login_details=log_details)
+                company=staff.company
+                dash_details = CompanyDetails.objects.get(id=company,superadmin_approval=1,Distributor_approval=1)
+                payroll= payroll_employee(title=title,first_name=fname,last_name=lname,alias=alias,image=image,joindate=joindate,salary_type=saltype,salary=salary,age=age,
+                            emp_number=empnum,designation=designation,location=location, gender=gender,dob=dob,blood=blood,parent=fmname,spouse_name=sname,workhr=workhr,
+                            amountperhr = amountperhr, address=address,permanent_address=paddress ,Phone=phone,emergency_phone=ephone, email=email,Income_tax_no=itn,Aadhar=an,
+                            UAN=uan,PFN=pfn,PRAN=pran,uploaded_file=attach,isTDS=istdsval,TDS_percentage=tds,salaryrange = salarydate,acc_no=accno,IFSC=ifsc,bank_name=bname,branch=branch,transaction_type=ttype,company=dash_details,login_details=log_details)
+                payroll.save()
+                
+                messages.info(request,'employee created')
+                return redirect('company_mark_attendance')
+     return redirect('company_mark_attendance')
             
 def attendance_add_blood(request):
      if request.method == "POST":
         blood = request.POST.get('blood')
+
+        # Check if the blood group already exists
+        existing_entry = Bloodgroup.objects.filter(Blood_group=blood).first()
+
+        if existing_entry:
+            # Blood group already exists, return an appropriate message
+            return JsonResponse({'blood': blood, 'message': 'Blood group already exists'})
+
+        # Blood group doesn't exist, create a new entry
         Bloodgroup.objects.create(Blood_group=blood)
-        return JsonResponse({ 'blood': blood})
-     return render(request,'company_mark_attendance.html') 
-    
+        return JsonResponse({'blood': blood, 'message': 'Blood group saved successfully'})
+
+     return JsonResponse({'message': 'Invalid request method'}, status=400)
+     
 def attendance_import(request):
     if request.method == 'POST' and 'file' in request.FILES:
         if 'login_id' in request.session:

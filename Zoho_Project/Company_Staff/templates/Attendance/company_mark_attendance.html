@@ -9,6 +9,12 @@
   table tr td:hover {
   cursor: pointer;
 }
+.action-button {
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 10px; 
+    margin: 10px;
+}
 .btn-orange {
     background-color: orange; 
     color: white;              
@@ -629,8 +635,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                             </div>
                             <hr>
                             <div class="action-button">
-                                <button class="btn text-light" type="submit" style="background-color: chocolate; width: 150px; font-size: medium;" onclick="validateform()">Add</button>
-                                <button class="btn btn-danger" type="reset" style="background-color: chocolate; width: 150px; font-size: medium;" data-dismiss="modal" onclick="goToTop()">Cancel</button>
+                                <button class="btn  btn-add " type="submit"  onclick="validateform()">Add</button>
+                                <button class="btn btn-add" type="reset"  data-dismiss="modal" onclick="goToTop()">Cancel</button>
                             </div>
 
                           
@@ -650,7 +656,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                                 <form action="" method="POST" enctype="multipart/form-data" id="blood1"  >
                                   {% csrf_token %}
                                   <div class="modal-body">
-                                    <input type="text" class="form-control text-light" name="blood" id="blood_form" title="Please enter uppercase letters">
+                                    <input type="text" class="form-control text-light" name="blood" id="blood_form"  title="Enter Uppercase Letter" required>
                                   </div>
                                   <div class="modal-footer">
                                     <button type="button" class="btn btn-add" data-dismiss="modal">Close</button>
@@ -685,33 +691,45 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 });
             }
         </script>
+        <script>
 
-<script>
-    async function uploadBlood() {
-        const form = document.getElementById('blood1'); // Adjust the form ID if needed
-        const formData = new FormData(form);
+async function uploadBlood() {
+    
+    
+    const form = document.getElementById('blood1');
+    
+    const formData = new FormData(form);
 
-
-        
-       var response = await fetch('attendance_add_blood', {
+    try {
+        const response = await fetch('attendance_add_blood', {
             method: 'POST',
             body: formData
-        })
-        if(response.ok){
-            var result=await response.json()
-            console.log(result.message)
-            alert(result.message)
-            document.getElementById('blood1').reset();
-            var newOption = document.createElement("option");
+        });
 
-        // Set the value and text for the new option
-            newOption.value = result.blood;
-            newOption.text = result.blood;
+        if (response.ok) {
+            const result = await response.json();
 
-           
-            document.getElementById("blood").appendChild(newOption);
+            if (result.message === 'Blood group saved successfully') {
+                document.getElementById('blood1').reset();
+                var newOption = document.createElement("option");
+                newOption.value = result.blood;
+                newOption.text = result.blood;
+                document.getElementById("blood").appendChild(newOption);
+            }
+
+            alert(result.message);
+        } else {
+            throw new Error('Failed to save blood group');
         }
+    } catch (error) {
+        console.error('Error saving blood group:', error);
+        alert('An error occurred while saving blood group. Please try again later.');
     }
+}
+
+document.getElementById('commentModal').addEventListener('click', function (event) {
+    event.stopPropagation();
+});
 </script>
           <script>
          

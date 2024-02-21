@@ -1147,109 +1147,135 @@ def attendance_delete(request,id):
     return redirect('attendance_overview',employee_id,target_month,target_year)
 
 def attendance_create_employee(request):
-     if request.method=='POST':
-        if 'login_id' in request.session:
-            log_id = request.session['login_id']
-        if 'login_id' not in request.session:
+     if request.method == 'POST':
+        # Get login_id from session
+        log_id = request.session.get('login_id')
+        if not log_id:
             return redirect('/')
-        log_details= LoginDetails.objects.get(id=log_id)
-        if log_details.user_type == 'Company':    
-            company_details = CompanyDetails.objects.get(login_details=log_details,superadmin_approval=1,Distributor_approval=1)
-            title=request.POST['title']
-            fname=request.POST['fname']
-            lname=request.POST['lname']
-            alias=request.POST['alias']
-            joindate=request.POST['joindate']
-            salarydate=request.POST['salary']
-            saltype=request.POST['saltype']
-            if (saltype == 'Fixed'):
-                salary=request.POST['fsalary']
-            else:
-                salary=request.POST['vsalary']
-            image=request.FILES.get('file')
-            amountperhr=request.POST['amnthr']
-            workhr=request.POST['hours'] 
-            empnum=request.POST['empnum']
-            if payroll_employee.objects.filter(emp_number=empnum,company=company_details):
-                messages.info(request,'employee number all ready exists')
-                return redirect('attendance_create_employee')
-            designation = request.POST['designation']
-            location=request.POST['location']
-            gender=request.POST['gender']
-            dob=request.POST['dob']
-            blood=request.POST['blood']
-            fmname=request.POST['fm_name']
-            sname=request.POST['s_name']        
-            add1=request.POST['address']
-            add2=request.POST['address2']
-            address=add1+" "+add2
-            padd1=request.POST['paddress'] 
-            padd2=request.POST['paddress2'] 
-            paddress= padd1+padd2
-            phone=request.POST['phone']
-            ephone=request.POST['ephone']
-            result_set1 = payroll_employee.objects.filter(company=company_details,Phone=phone)
-            result_set2 = payroll_employee.objects.filter(company=company_details,emergency_phone=ephone)
-            if result_set1:
-                messages.error(request,'phone no already exists')
-                return redirect('attendance_create_employee')
-            if result_set2:
-                messages.error(request,'phone no already exists')
-                return redirect('attendance_create_employee')
-            email=request.POST['email']
-            result_set = payroll_employee.objects.filter(company=company_details,email=email)
-            if result_set:
-                messages.error(request,'email already exists')
-                return redirect('attendance_create_employee')
-            isdts=request.POST['tds']
-            attach=request.FILES.get('attach')
-            if isdts == '1':
-                istdsval=request.POST['pora']
-                if istdsval == 'Percentage':
-                    tds=request.POST['pcnt']
-                elif istdsval == 'Amount':
-                    tds=request.POST['amnt']
-            else:
+        
+        
+        log_details = LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Staff':
+            dash_details = StaffDetails.objects.get(login_details=log_details)
+            
+            company = dash_details.company
+            print(company)
+        elif log_details.user_type == 'Company':
+            company = CompanyDetails.objects.get(login_details=log_details)
+        
+        
+        # Extract data from POST request
+        title=request.POST['title']
+        fname=request.POST['fname']
+        lname=request.POST['lname']
+        alias=request.POST['alias']
+        joindate=request.POST['joindate']
+        salarydate=request.POST['salary']
+        saltype=request.POST['saltype']
+        if (saltype == 'Fixed'):
+            salary=request.POST['fsalary']
+        else:
+            salary=request.POST['vsalary']
+        image=request.FILES.get('file')
+        amountperhr=request.POST['amnthr']
+        workhr=request.POST['hours'] 
+        empnum=request.POST['empnum']
+        if payroll_employee.objects.filter(emp_number=empnum,company=company):
+            messages.info(request,'employee number all ready exists')
+            return redirect('company_mark_attendance')
+        designation = request.POST['designation']
+        location=request.POST['location']
+        gender=request.POST['gender']
+        dob=request.POST['dob']
+        blood=request.POST['blood']
+        fmname=request.POST['fm_name']
+        sname=request.POST['s_name']        
+        add1=request.POST['address']
+        add2=request.POST['address2']
+        address=add1+" "+add2
+        padd1=request.POST['paddress'] 
+        padd2=request.POST['paddress2'] 
+        paddress= padd1+padd2
+        phone=request.POST['phone']
+        ephone=request.POST['ephone']
+        result_set1 = payroll_employee.objects.filter(company=company,Phone=phone)
+        result_set2 = payroll_employee.objects.filter(company=company,emergency_phone=ephone)
+        if result_set1:
+            messages.error(request,'phone no already exists')
+            return redirect('company_mark_attendance')
+        if result_set2:
+            messages.error(request,'phone no already exists')
+            return redirect('company_mark_attendance')
+        email=request.POST['email']
+        result_set = payroll_employee.objects.filter(company=company,email=email)
+        if result_set:
+            messages.error(request,'email already exists')
+            return redirect('company_mark_attendance')
+        isdts=request.POST['tds']
+        attach=request.FILES.get('attach')
+        if isdts == '1':
+            istdsval=request.POST['pora']
+            if istdsval == 'Percentage':
+                tds=request.POST['pcnt']
+            elif istdsval == 'Amount':
+                tds=request.POST['amnt']
+        else:
                 istdsval='No'
                 tds = 0
-            itn=request.POST['itn']
-            an=request.POST['an']
-            if payroll_employee.objects.filter(Aadhar=an,company=company_details):
-                    messages.error(request,'Aadhra number already exists')
-                    return redirect('attendance_create_employee')   
-            uan=request.POST['uan'] 
-            pfn=request.POST['pfn']
-            pran=request.POST['pran']
-            age=request.POST['age']
-            bank=request.POST['bank']
-            accno=request.POST['acc_no']       
-            ifsc=request.POST['ifsc']       
-            bname=request.POST['b_name']       
-            branch=request.POST['branch']
-            ttype=request.POST['ttype']
-            if log_details.user_type == 'Company':
-                dash_details = CompanyDetails.objects.get(login_details=log_details,superadmin_approval=1,Distributor_approval=1)
-                payroll= payroll_employee(title=title,first_name=fname,last_name=lname,alias=alias,image=image,joindate=joindate,salary_type=saltype,salary=salary,age=age,
+        itn=request.POST['itn']
+        an=request.POST['an']
+        if payroll_employee.objects.filter(Aadhar=an,company=company):
+                messages.error(request,'Aadhra number already exists')
+                return redirect('company_mark_attendance')   
+        uan=request.POST['uan'] 
+        pfn=request.POST['pfn']
+        pran=request.POST['pran']
+        age=request.POST['age']
+        bank=request.POST['bank']
+        accno=request.POST['acc_no']       
+        ifsc=request.POST['ifsc']       
+        bname=request.POST['b_name']       
+        branch=request.POST['branch']
+        ttype=request.POST['ttype']
+        payroll= payroll_employee(title=title,first_name=fname,last_name=lname,alias=alias,image=image,joindate=joindate,salary_type=saltype,salary=salary,age=age,
                             emp_number=empnum,designation=designation,location=location, gender=gender,dob=dob,blood=blood,parent=fmname,spouse_name=sname,workhr=workhr,
                             amountperhr = amountperhr, address=address,permanent_address=paddress ,Phone=phone,emergency_phone=ephone, email=email,Income_tax_no=itn,Aadhar=an,
-                            UAN=uan,PFN=pfn,PRAN=pran,uploaded_file=attach,isTDS=istdsval,TDS_percentage=tds,salaryrange = salarydate,acc_no=accno,IFSC=ifsc,bank_name=bname,branch=branch,transaction_type=ttype,company=dash_details,login_details=log_details)
-                payroll.save()
-                
-                messages.info(request,'employee created')
-                return redirect('company_mark_attendance')
-            elif log_details.user_type == 'Staff':
-                staff = StaffDetails.objects.get(login_details=log_details)
-                company=staff.company
-                dash_details = CompanyDetails.objects.get(id=company,superadmin_approval=1,Distributor_approval=1)
-                payroll= payroll_employee(title=title,first_name=fname,last_name=lname,alias=alias,image=image,joindate=joindate,salary_type=saltype,salary=salary,age=age,
-                            emp_number=empnum,designation=designation,location=location, gender=gender,dob=dob,blood=blood,parent=fmname,spouse_name=sname,workhr=workhr,
-                            amountperhr = amountperhr, address=address,permanent_address=paddress ,Phone=phone,emergency_phone=ephone, email=email,Income_tax_no=itn,Aadhar=an,
-                            UAN=uan,PFN=pfn,PRAN=pran,uploaded_file=attach,isTDS=istdsval,TDS_percentage=tds,salaryrange = salarydate,acc_no=accno,IFSC=ifsc,bank_name=bname,branch=branch,transaction_type=ttype,company=dash_details,login_details=log_details)
-                payroll.save()
-                
-                messages.info(request,'employee created')
-                return redirect('company_mark_attendance')
-     return redirect('company_mark_attendance')
+                            UAN=uan,PFN=pfn,PRAN=pran,uploaded_file=attach,isTDS=istdsval,TDS_percentage=tds,salaryrange = salarydate,acc_no=accno,IFSC=ifsc,bank_name=bname,branch=branch,transaction_type=ttype,company=company,login_details=log_details)
+        payroll.save()
+        
+        
+        return redirect('company_mark_attendance')
+     else:
+        
+        return redirect('/')
+def attendance_employee_dropdown(request):
+    if 'login_id' in request.session:
+        log_id = request.session['login_id']
+        if 'login_id' not in request.session:
+            return redirect('/')
+        log_details = LoginDetails.objects.get(id=log_id)
+        if log_details.user_type == 'Company':
+            company=CompanyDetails.objects.get(login_details=log_details)
+            options = {}
+            option_objects = payroll_employee.objects.filter(company=company,status='Active')
+            for option in option_objects:
+                full_name = f"{option.first_name} {option.last_name}"
+                options[option.id] = full_name
+
+            return JsonResponse(options)
+            
+        if log_details.user_type=='Staff':
+            staff = StaffDetails.objects.get(login_details=log_details)
+            options = {}
+            option_objects = payroll_employee.objects.filter(company=staff.company,status='Active')
+            for option in option_objects:
+                full_name = f"{option.first_name} {option.last_name}"
+                options[option.id] = full_name
+
+            return JsonResponse(options)
+           
+
+        
             
 def attendance_add_blood(request):
      if request.method == "POST":

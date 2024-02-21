@@ -36,6 +36,7 @@ urlpatterns = [
     path('attendance_add_blood',views.attendance_add_blood,name='attendance_add_blood'),
     path('attendance_create_employee',views.attendance_create_employee,name='attendance_create_employee'),
     path('attendance_import',views.attendance_import,name='attendance_import'),
+    path('attendance_employee_dropdown',views.attendance_employee_dropdown,name='attendance_employee_dropdown'),
     # -------------------------------Staff section--------------------------------
     path('Staff/Dashboard',views.staff_dashboard,name='staff_dashboard'),
     path('Staff/Profile',views.staff_profile,name='staff_profile'),

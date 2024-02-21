@@ -87,7 +87,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                     <div class="input-group">
                       
                       
-                      <select name="employee"  class="form-control" style="font-size: 16px;color: white;">
+                      <select name="employee"  class="form-control" id="employee-dropdown" style="font-size: 16px;color: white;">
                           <option>Select Employee</option>
                           {% for i in staffs %}
                           
@@ -175,7 +175,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                 <section>
                     <div class="container pl-5" style="color:white;">
                        
-                        <form method="POST" action="" enctype="multipart/form-data" id="myForm" onsubmit="event.preventDefault(); saveEmployee();" >
+                        <form method="POST" action="" enctype="multipart/form-data" id="myForm" onsubmit="event.preventDefault(); submitForm();" >
                             {% csrf_token %}
                             <div class="row">
                                 <div class="data  col-md-6 ">
@@ -278,7 +278,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                                                 <input type="number" class="form-control text-dark bg-light" name="hours" id="hours" onkeyup="calculateAmount()" value="0">
                                             </div>
                                         </div>
-                                        <div class="row pb-3">
+                                        <div class="row pb-3"> 
                                             <div class="col-6">
                                                 <label for="">Salary Amount</label>
                                             </div>
@@ -631,6 +631,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                                     </div>
                                 </div>
                                 </div>
+                                <input type="hidden" id="employee-create-url" value="{% url 'attendance_create_employee' %}">
                 
                             </div>
                             <hr>
@@ -668,28 +669,52 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                         </div>
                          
           </div>
+            
           <script>
-           
-            function saveEmployee() {
+            function submitForm() {
+                var formData = new FormData(document.getElementById('myForm'));
                 
-                var formData = new FormData(document.getElementById("myForm"));
-                
-                fetch("{% url 'attendance_create_employee' %}", {
-    method: "POST",
-    body: formData
-})
-.then(response => {
-    if (response.ok) {
-        alert("Employee saved successfully");
-    } else {
-        throw new Error("Failed to save employee");
-    }
-})
-.catch(error => {
-    console.error("Error saving employee:", error);
-    alert("An error occurred while saving employee. Please try again later.");
-});
+                $.ajax({
+                    url: "{% url 'attendance_create_employee' %}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    success: function(response) {
+                        console.log(response);
+                        alert('Employee added successfully!');
+                        $('#myForm')[0].reset();
+                        $('#file').val('');
+                        reloadItem();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
+                        alert('Error adding employee. Please try again.');
+                    }
+                });
             }
+            function reloadItem() {
+  $.ajax({
+    url: "{% url 'attendance_employee_dropdown' %}",
+    type: "GET",
+    dataType: "json",
+    success: function(data) {
+      // Clear existing options before adding new ones
+      $('.item').empty();
+
+      // Iterate over the data and append options to the dropdown
+      $.each(data, function(key, value) {
+        $('.item').append($('<option></option>').attr('value', key).text(value));
+      });
+    },
+    error: function(xhr, status, error) {
+      console.error(xhr.responseText);
+    }
+  });
+}
         </script>
         <script>
 

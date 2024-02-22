@@ -502,7 +502,7 @@ def staff_password_change(request):
     
 
 
-# -------------------------------Attendance section--------------------------------
+#---------------- Zoho Final Attendance - Meenu Shaju - Start--------------------
     
 def get_days_in_month(target_year, target_month):
     _, days_in_month = monthrange(target_year, target_month)
@@ -1237,17 +1237,28 @@ def attendance_create_employee(request):
         bname=request.POST['b_name']       
         branch=request.POST['branch']
         ttype=request.POST['ttype']
-        payroll= payroll_employee(title=title,first_name=fname,last_name=lname,alias=alias,image=image,joindate=joindate,salary_type=saltype,salary=salary,age=age,
-                            emp_number=empnum,designation=designation,location=location, gender=gender,dob=dob,blood=blood,parent=fmname,spouse_name=sname,workhr=workhr,
-                            amountperhr = amountperhr, address=address,permanent_address=paddress ,Phone=phone,emergency_phone=ephone, email=email,Income_tax_no=itn,Aadhar=an,
-                            UAN=uan,PFN=pfn,PRAN=pran,uploaded_file=attach,isTDS=istdsval,TDS_percentage=tds,salaryrange = salarydate,acc_no=accno,IFSC=ifsc,bank_name=bname,branch=branch,transaction_type=ttype,company=company,login_details=log_details)
-        payroll.save()
-        
-        
-        return redirect('company_mark_attendance')
-     else:
-        
-        return redirect('/')
+        try:
+            payroll= payroll_employee(title=title,first_name=fname,last_name=lname,alias=alias,image=image,joindate=joindate,salary_type=saltype,salary=salary,age=age,
+                                emp_number=empnum,designation=designation,location=location, gender=gender,dob=dob,blood=blood,parent=fmname,spouse_name=sname,workhr=workhr,
+                                amountperhr = amountperhr, address=address,permanent_address=paddress ,Phone=phone,emergency_phone=ephone, email=email,Income_tax_no=itn,Aadhar=an,
+                                UAN=uan,PFN=pfn,PRAN=pran,uploaded_file=attach,isTDS=istdsval,TDS_percentage=tds,salaryrange = salarydate,acc_no=accno,IFSC=ifsc,bank_name=bname,branch=branch,transaction_type=ttype,company=company,login_details=log_details)
+            payroll.save()
+            new_employee_id = payroll.id  
+            new_employee_name = f"{fname} {lname}"
+            
+            
+            data = {
+                'status': 'success',
+                'employee_id': new_employee_id,
+                'employee_name': new_employee_name
+            }
+            
+            
+            return JsonResponse(data)
+        except Exception as e:
+           
+            error_message = str(e)
+            return JsonResponse({'status': 'error', 'message': error_message})
 def attendance_employee_dropdown(request):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
@@ -1345,6 +1356,7 @@ def attendance_import(request):
             return redirect('company_attendance_list')
 
     return HttpResponse("No file uploaded or invalid request method")
+#---------------- Zoho Final Attendance - Meenu Shaju - End--------------------
                 
 
                         

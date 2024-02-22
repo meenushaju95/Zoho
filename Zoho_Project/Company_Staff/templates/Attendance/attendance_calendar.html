@@ -494,8 +494,8 @@
             })
             .then(response => {
                 if (response.ok) {
-                    // If the comment is successfully deleted, remove it from the UI
-                    link.closest('tr').remove(); // Assuming the comment is in a table row
+                    
+                    link.closest('tr').remove(); 
                 } else {
                     throw new Error('Failed to delete comment');
                 }
@@ -508,6 +508,8 @@
     });
 });
   </script>
+
+
 
 
 

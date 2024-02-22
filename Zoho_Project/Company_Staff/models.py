@@ -3,7 +3,7 @@ from Register_Login.models import*
 
 # Create your models here.
 
-#---------------- models for zoho modules--------------------
+
 class payroll_employee(models.Model):
     title = models.CharField(max_length=100,null=True)
     first_name = models.CharField(max_length=100,null=True)
@@ -54,6 +54,8 @@ class Holiday(models.Model):
     user = models.ForeignKey(LoginDetails, on_delete=models.CASCADE, null=True, blank=True)
     company=models.ForeignKey(CompanyDetails, on_delete=models.CASCADE, null=True,blank=True)
 
+#---------------- Zoho Final Attendance - Meenu Shaju - Start--------------------
+
 
 
 class Attendance(models.Model):
@@ -80,6 +82,8 @@ class Attendance_comment(models.Model):
     comment = models.TextField(null=True) 
     month = models.IntegerField(null=True)  
     year = models.IntegerField(null=True)  
+
+#---------------- Zoho Final Attendance - Meenu Shaju - End--------------------
 
 class Bloodgroup(models.Model):
     Blood_group=models.CharField(max_length=255,null=True)

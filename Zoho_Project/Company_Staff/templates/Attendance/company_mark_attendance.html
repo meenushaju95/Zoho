@@ -44,6 +44,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
    
     transition: background-color 0.3s ease; /* Add smooth transition effect */
 }
+select#employee-dropdown {
+            color: white; /* Set the color of the selected option */
+            background-color: black; /* Set the background color of the dropdown box */
+        }
+
+        /* Style for the option elements */
+        select#employee-dropdown option {
+            color: black; 
+            background-color: white;/* Set the color of the options */
+        }
 
 .btn-add:hover {
     background-color: orange;
@@ -87,7 +97,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                     <div class="input-group">
                       
                       
-                      <select name="employee"  class="form-control" id="employee-dropdown" style="font-size: 16px;color: white;">
+                      <select name="employee"  class="form-control" id="employee-dropdown" style="font-size: 16px;color:white;">
                           <option>Select Employee</option>
                           {% for i in staffs %}
                           
@@ -297,10 +307,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                                         <div class="col-6 col-lg-7 col-md-10 col-sm-5">
                                             <br><br><br><br>
                                             <label for="image-input">
-                                                <img class="img-fluid" src="{% static 'images/payrollimg.png' %}" alt="profile image" id="img"
+                                                <img  class="img-fluid" src="{% static 'images/payrollimg.png' %}" alt="profile image" id="img"
                                                     style="background-color: rgba(156, 156, 156, 0.267); border-radius: 30px;">
                                             </label>
-                                            <input id="image-input" type="file" name="file" class="form-control" accept="image/*" onchange="loadFile(event)" style="display: none;">
+                                            <input id="image-input"  type="file" name="file" class="form-control" accept="image/*" onchange="loadFile(event)" style="display: none;">
                                         </div>
                                     </div>
                                 </div>
@@ -684,37 +694,49 @@ input[type="date"]::-webkit-calendar-picker-indicator {
                         "X-CSRFToken": "{{ csrf_token }}"
                     },
                     success: function(response) {
-                        console.log(response);
-                        alert('Employee added successfully!');
-                        $('#myForm')[0].reset();
-                        $('#file').val('');
-                        reloadItem();
-                    },
-                    error: function(xhr, status, error) {
-                        console.error(xhr.responseText);
-                        alert('Error adding employee. Please try again.');
-                    }
-                });
+                if (response.status === 'success') {
+                    alert('Employee added successfully! ID: ' + response.employee_id + ', Name: ' + response.employee_name);
+                    document.getElementById("myForm").reset();
+                    $("#img").attr("src", "");
+                     
+                    reloadItem();
+                } else if (response.status === 'error') {
+                    alert('Error adding employee: ' + response.message);
+                } else {
+                    alert('Unknown response status. Please try again.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Error adding employee. Please try again.');
             }
-            function reloadItem() {
-  $.ajax({
-    url: "{% url 'attendance_employee_dropdown' %}",
-    type: "GET",
-    dataType: "json",
-    success: function(data) {
-      // Clear existing options before adding new ones
-      $('.item').empty();
-
-      // Iterate over the data and append options to the dropdown
-      $.each(data, function(key, value) {
-        $('.item').append($('<option></option>').attr('value', key).text(value));
-      });
-    },
-    error: function(xhr, status, error) {
-      console.error(xhr.responseText);
+        });
     }
-  });
-}
+            function reloadItem() {
+        $.ajax({
+            url: "{% url 'attendance_employee_dropdown' %}",
+            type: "GET",
+            dataType: "json",
+            success: function(data) {
+                var dropdown = $('#employee-dropdown'); 
+                dropdown.empty(); 
+                
+                $.each(data, function(key, value) {
+                    dropdown.append($('<option></option>').attr('value', key).text(value));
+                });
+                dropdown.css({
+                'font-size': '16px',
+                'color': 'white',
+                // You can set the background color here
+            });
+        },
+            
+            error: function(xhr, status, error) {
+                console.error(xhr.responseText);
+                alert('Error reloading dropdown options.');
+            }
+        });
+    }
         </script>
         <script>
 

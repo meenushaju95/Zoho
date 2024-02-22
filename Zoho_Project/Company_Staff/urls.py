@@ -20,7 +20,7 @@ urlpatterns = [
     
     
     
-     # -------------------------------Attendance section--------------------------------
+     #---------------- Zoho Final Attendance - Meenu Shaju - Start--------------------
     path('company_attendance_list',views.company_attendance_list,name='company_attendance_list'),
     path('company_mark_attendance',views.company_mark_attendance,name='company_mark_attendance'),
     path('add_attendance',views.add_attendance,name='add_attendance'),
@@ -37,6 +37,9 @@ urlpatterns = [
     path('attendance_create_employee',views.attendance_create_employee,name='attendance_create_employee'),
     path('attendance_import',views.attendance_import,name='attendance_import'),
     path('attendance_employee_dropdown',views.attendance_employee_dropdown,name='attendance_employee_dropdown'),
+    #---------------- Zoho Final Attendance - Meenu Shaju - End--------------------
+
+
     # -------------------------------Staff section--------------------------------
     path('Staff/Dashboard',views.staff_dashboard,name='staff_dashboard'),
     path('Staff/Profile',views.staff_profile,name='staff_profile'),

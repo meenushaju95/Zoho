@@ -5,9 +5,10 @@ from django.contrib import messages
 from django.conf import settings
 from datetime import date
 from datetime import datetime, timedelta
-from .models import payroll_employee,Attendance,Attendance_History,Holiday,Attendance_comment,Bloodgroup
+from .models import payroll_employee,Attendance,Attendance_History,Holiday,Attendance_comment,Bloodgroup,employee_history
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+from django.core.mail import EmailMultiAlternatives
 
 from calendar import monthrange
 from collections import defaultdict
@@ -609,7 +610,7 @@ def company_attendance_list(request):
         request.session['employee_ids'] = employee_ids
         print(employee_ids)
 
-        return render(request, 'Attendance/company_attendance_list.html', {
+        return render(request, 'zohomodules/Attendance/company_attendance_list.html', {
             'all_entries': all_entries,
             'month_name': MONTH_NAMES,
             'allmodules': allmodules
@@ -626,14 +627,14 @@ def company_mark_attendance(request):
             employee = payroll_employee.objects.filter(login_details=log_details,status='Active')
             allmodules= ZohoModules.objects.get(company=company)
             bloods=Bloodgroup.objects.all
-            return render(request,'Attendance/company_mark_attendance.html',{'staffs':employee,'blood':bloods,'allmodules':allmodules})
+            return render(request,'zohomodules/Attendance/company_mark_attendance.html',{'staffs':employee,'blood':bloods,'allmodules':allmodules})
         if log_details.user_type=='Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
             
             employee = payroll_employee.objects.filter(company=staff.company,status='Active')
             allmodules= ZohoModules.objects.get(company=staff.company)
             bloods = Bloodgroup.objects.all()
-            return render(request,'Attendance/company_mark_attendance.html',{'staffs':employee,'blood':bloods,'allmodules':allmodules})
+            return render(request,'zohomodules/Attendance/company_mark_attendance.html',{'staffs':employee,'blood':bloods,'allmodules':allmodules})
         
 def add_attendance(request):
         if request.method == 'POST':
@@ -797,7 +798,7 @@ def attendance_calendar(request, employee_id, target_year, target_month):
     
    
     
-    return render(request, 'Attendance/attendance_calendar.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries,'employee':employee,'comments':comment,'calendar_data':calendar_data,'history':history,'allmodules':allmodules})
+    return render(request, 'zohomodules/Attendance/attendance_calendar.html', {'emp_attendance': employee_attendance,'holiday':holidays,'entries':all_entries,'employee':employee,'comments':comment,'calendar_data':calendar_data,'history':history,'allmodules':allmodules})
 
 def attendance_add_comment(request):
     if request.method == 'POST':
@@ -901,7 +902,7 @@ def attendance_overview(request, employee_id, target_month, target_year):
     # Calculate the working days
         working_days = len(days_in_month) - leave_count - holiday_count
 
-        return render(request,'attendance/attendance_overview.html',{'current_url': current_url,'items':items,'employee': employee,'tm':target_month,'target_month': target_month_name,'target_year': target_year,'leave_count': leave_count,'holiday_count': holiday_count,'working_days': working_days,'allmodules':allmodules})
+        return render(request,'zohomodules/Attendance/attendance_overview.html',{'current_url': current_url,'items':items,'employee': employee,'tm':target_month,'target_month': target_month_name,'target_year': target_year,'leave_count': leave_count,'holiday_count': holiday_count,'working_days': working_days,'allmodules':allmodules})
 def attendance_pdf(request,employee_id,target_month,target_year) :
     if 'login_id' in request.session:
         log_id = request.session['login_id']
@@ -961,7 +962,7 @@ def attendance_pdf(request,employee_id,target_month,target_year) :
     # Calculate the working days
         working_days = len(days_in_month) - leave_count - holiday_count
 
-        template_path = 'attendance/attendance_pdf.html'
+        template_path = 'zohomodules/Attendance/attendance_pdf.html'
     context = {
         'items': items,
         'employee': employee,
@@ -998,7 +999,8 @@ def attendance_email(request,employee_id,target_month,target_year):
 
                 if log_details.user_type == 'Staff':
                     staff = StaffDetails.objects.get(login_details=log_details)
-                    items = Attendance.objects.filter(company=staff.company,date__month=target_month,date__year=target_year)
+                    company=staff.company
+                    items = Attendance.objects.filter(company=company,date__month=target_month,date__year=target_year)
                         
                 elif log_details.user_type == 'Company':
                     company = CompanyDetails.objects.get(login_details=log_details)
@@ -1056,26 +1058,31 @@ def attendance_email(request,employee_id,target_month,target_year):
             'holiday_count': holiday_count,
             'working_days': working_days
         }
-                template_path = 'attendance/attendance_pdf.html'
+                template_path = 'zohomodules/Attendance/attendance_pdf.html'
                 template = get_template(template_path)
 
                 html  = template.render(context)
                 result = BytesIO()
                 pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)#, link_callback=fetch_resources)
                 pdf = result.getvalue()
-                filename = f'Attendance Details - {employee.first_name} {employee.last_name}.pdf'
                 subject = f"Attendance Details - {company.company_name}"
-                email = EmailMessage(subject, f"Hi,\nPlease find the attached file for -{employee.first_name} {employee.last_name}. \n{email_message}\n\n--\nRegards,\n{company.company_name}\n{company.address}\n{company.city} - {company.state}\n{company.contact}", from_email=settings.EMAIL_HOST_USER, to=emails_list)
-                email.attach(filename, pdf, "application/pdf")
-                email.send(fail_silently=False)
+                email = f"Hi,\nPlease find the attached file for -{employee.first_name} {employee.last_name}. \n{email_message}\n\n--\nRegards,\n{company.company_name}\n{company.address}\n{company.city} - {company.state}\n{company.contact}"
+                email_from = settings.EMAIL_HOST_USER
+
+        
+                msg = EmailMultiAlternatives(subject, email, email_from, emails_list)
+                msg.attach(f'{employee.first_name}_{employee.last_name}_Attendance_Details.pdf', pdf, "application/pdf")
+                
+                # Send the email
+                msg.send()
 
                 messages.success(request, 'Statement has been shared via email successfully..!')
-                return redirect(attendance_overview,employee_id,target_month,target_year)
+                return redirect(attendance_overview, employee_id, target_month, target_year)
+
         except Exception as e:
-                
-                messages.error(request, f'{e}')
-                return redirect(attendance_overview,employee_id,target_month,target_year)
-        
+            print(f"Error sending email: {e}")
+            messages.error(request, 'An error occurred while sending the email. Please try again later.')
+            return redirect(attendance_overview, employee_id, target_month, target_year)
 def attendance_edit(request,id):
     if 'login_id' in request.session:
         log_id = request.session['login_id']
@@ -1097,7 +1104,7 @@ def attendance_edit(request,id):
         attendance=Attendance.objects.get(id=id)
         target_month = attendance.date.month
         target_year = attendance.date.year
-        return render(request,'attendance/attendance_edit.html',{'item':attendance,'employee':employee,'tm':target_month,'ty':target_year,'allmodules':allmodules})
+        return render(request,'zohomodules/Attendance/attendance_edit.html',{'item':attendance,'employee':employee,'tm':target_month,'ty':target_year,'allmodules':allmodules})
 def edit_attendance(request,id):
     if request.method =='POST':
         if 'login_id' in request.session:
@@ -1243,6 +1250,8 @@ def attendance_create_employee(request):
                                 amountperhr = amountperhr, address=address,permanent_address=paddress ,Phone=phone,emergency_phone=ephone, email=email,Income_tax_no=itn,Aadhar=an,
                                 UAN=uan,PFN=pfn,PRAN=pran,uploaded_file=attach,isTDS=istdsval,TDS_percentage=tds,salaryrange = salarydate,acc_no=accno,IFSC=ifsc,bank_name=bname,branch=branch,transaction_type=ttype,company=company,login_details=log_details)
             payroll.save()
+            history=employee_history(company=company,login_details=log_details, employee=payroll,Action='CREATED')
+            history.save()
             new_employee_id = payroll.id  
             new_employee_name = f"{fname} {lname}"
             

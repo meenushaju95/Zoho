@@ -54,6 +54,13 @@ class Holiday(models.Model):
     user = models.ForeignKey(LoginDetails, on_delete=models.CASCADE, null=True, blank=True)
     company=models.ForeignKey(CompanyDetails, on_delete=models.CASCADE, null=True,blank=True)
 
+class employee_history(models.Model):
+    company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True)
+    login_details=models.ForeignKey(LoginDetails,on_delete=models.CASCADE,null=True)
+    employee=models.ForeignKey(payroll_employee,on_delete=models.CASCADE,null=True)
+    Date=models.DateField(null=True,auto_now=True)
+    Action=models.CharField(null=True,max_length=255)
+
 #---------------- Zoho Final Attendance - Meenu Shaju - Start--------------------
 
 
@@ -62,7 +69,7 @@ class Attendance(models.Model):
     company=models.ForeignKey(CompanyDetails,on_delete=models.CASCADE,null=True)
     login_details=models.ForeignKey(LoginDetails,on_delete=models.CASCADE,null=True)
     employee=models.ForeignKey(payroll_employee,on_delete=models.CASCADE,null=True)
-    holiday=models.ForeignKey(Holiday,on_delete=models.CASCADE,null=True)
+    
     date=models.DateField(null=True)
     status=models.CharField(max_length=255,null=True)
     reason=models.CharField(max_length=255,null=True)

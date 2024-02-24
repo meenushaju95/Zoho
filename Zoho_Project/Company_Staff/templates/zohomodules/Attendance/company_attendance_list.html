@@ -193,15 +193,14 @@
             
 
             <div class="table-responsive">
-                <table id="attendanceTable" class="table mt-lg-5 mt-2 rounded" style="background-color: rgb(0, 0, 0);color: white;">
+                <table id="attendanceTable" class="table mt-lg-5 mt-2 rounded" style="background-color: rgb(0, 0, 0);color: white;text-align: center;">
                     <thead>
                         <tr class="border-bottom border-dark">
                             <th scope="col"><b>#</b></th>
                             <th scope="col"><b>Staff Name</b></th>
-                            <th scope="col"><b>Month</b></th>
-                            <th scope="col"><b>Year</b></th>
+                            <th scope="col"><b>Month - Year</b></th>
+                            <th scope="col"><b>Holidays</b></th>
                             <th scope="col"><b>Working Days</b></th>
-                            <th scope="col"><b>Holy Days</b></th>
                             <th scope="col"><b>Total Leave</b></th>
                         </tr>
                     </thead>
@@ -211,10 +210,10 @@
                             <tr class="border-bottom border-dark clickable-row" data-href="{% url 'attendance_calendar' entry.employee.id entry.target_year entry.target_month %}">
                                 <td>{{forloop.counter}}</td>
                                 <td>{{ entry.employee.first_name }} {{ entry.employee.last_name }}</td>
-                                <td>{{ entry.target_month_name }}</td>
-                                <td>{{ entry.target_year }}</td>
-                                <td>{{ entry.work_days }}</td>
+                                <td>{{ entry.target_month_name }} {{ entry.target_year }}</td>
                                 <td>{{ entry.holidays }}</td>
+                                <td>{{ entry.work_days }}</td>
+                                
                                 <td>{{ entry.total_leave }}</td> 
                             </tr>
                         
@@ -272,22 +271,22 @@
                         var originalOrder = rows.slice();  // Store the original order
                 
                         function sortTable(columnIndex, customSort) {
-    rows.sort(function (a, b) {
-        var aValue = a.cells[columnIndex].textContent.trim().toLowerCase();
-        var bValue = b.cells[columnIndex].textContent.trim().toLowerCase();
-        return customSort(aValue, bValue);
-    });
-
-    // Clear the existing tbody content
-    while (tbody.firstChild) {
-        tbody.removeChild(tbody.firstChild);
-    }
-
-    // Reorder the rows in the tbody
-    rows.forEach(function (row) {
-        tbody.appendChild(row);
-    });
-}
+                            rows.sort(function (a, b) {
+                                var aValue = a.cells[columnIndex].textContent.trim().toLowerCase();
+                                var bValue = b.cells[columnIndex].textContent.trim().toLowerCase();
+                                return customSort(aValue, bValue);
+                            });
+                
+                            // Clear the existing tbody content
+                            while (tbody.firstChild) {
+                                tbody.removeChild(tbody.firstChild);
+                            }
+                
+                            // Reorder the rows in the tbody
+                            rows.forEach(function (row) {
+                                tbody.appendChild(row);
+                            });
+                        }
                 
                         function clearSort() {
                             // Restore the original order
@@ -304,14 +303,22 @@
                             return a.localeCompare(b);
                         }
                 
-                        // Custom sorting function for month names
+                        // Custom sorting function for month and year
                         function monthSort(a, b) {
-                            var monthOrder = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
-                            return monthOrder.indexOf(a) - monthOrder.indexOf(b);
+                            var aText = a.split(' ');
+                            var bText = b.split(' ');
+                            var aMonth = aText[0].toLowerCase();
+                            var aYear = parseInt(aText[1]);
+                            var bMonth = bText[0].toLowerCase();
+                            var bYear = parseInt(bText[1]);
+                
+                            if (aYear !== bYear) {
+                                return aYear - bYear;
+                            } else {
+                                var monthOrder = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+                                return monthOrder.indexOf(aMonth) - monthOrder.indexOf(bMonth);
+                            }
                         }
-
-                       
-        
                 
                         // Event listeners for sorting buttons
                         document.getElementById("sortAll").addEventListener("click", function () {
@@ -325,7 +332,6 @@
                         document.getElementById("sortMonth").addEventListener("click", function () {
                             sortTable(2, monthSort); // Sorting by Month (column index 2) using custom sorting
                         });
-                        
                     });
                 </script>
                 <script>

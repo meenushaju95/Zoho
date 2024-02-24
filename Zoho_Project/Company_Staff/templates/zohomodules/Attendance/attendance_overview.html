@@ -48,7 +48,7 @@
     
     .custom-table td, .custom-table th {
         font-size: 16px; 
-        padding: 10px 20px; 
+        padding: 10px 10px; 
         text-align: center; 
     }
 
@@ -58,39 +58,52 @@
    
     .custom-table td {
         font-size: 16px; 
-        padding: 10px; 
+        padding: 4px; 
     }
 
     /* Styles for buttons */
     .btn-add {
-        border: 2px solid orange;
-        border-radius: 10px;
-        background-color: orange;
-        color: white;
-        width: 80px;
-        display: block;
-        margin: 0 auto;
-        text-align: center;
-        transition: background-color 0.3s ease; /* Add smooth transition effect */
-    }
+    border: 2px solid orange;
+    border-radius: 10px;
+    background-color: orange;
+    color: white;
+    width: 80px; /* Default width */
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    transition: background-color 0.3s ease; /* Add smooth transition effect */
+}
 
-    .btn-add:hover {
-        background-color: orange;
-        color: white; 
-    }
+.btn-add:hover {
+    background-color: orange;
+    color: white; 
+}
 
-    
-    @media (max-width: 768px) {
-        .custom-table {
-            width: 100%; 
-        }
-    }
-    .custom-table td, .custom-table th {
-        font-size: 16px; 
-        padding: 10px; 
-        padding-left: 16px; 
-    }
+.btn-add1 {
+    border: 2px solid orange;
+    border-radius: 10px;
+    background-color: orange;
+    color: white;
+    width: 60px; /* Default width */
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 14px;
+    transition: background-color 0.3s ease; /* Add smooth transition effect */
+}
 
+.btn-add1:hover {
+    background-color: orange;
+    color: white; 
+}
+
+/* Responsive width for buttons */
+@media screen and (max-width: 768px) {
+    .btn-add,
+    .btn-add1 {
+        width: 100%; /* Set width to 100% for small screens */
+    }
+}
 
   
 
@@ -113,20 +126,19 @@
 
 
         <div class="container-fluid bg-black" style="padding: 20px;">
-           
-          <div class="row">
-            <div class="col-md-9"> {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-success" role="alert" style="color: orange;background-color: black;border: none;">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}</div>
-            <div class="col-md-3">
-                <a href="{% url 'attendance_pdf' employee.id tm target_year %}" class="btn orange-link ">pdf</a>
-                <a href="" class="btn orange-link" onclick="printData()">print</a>
-                
-                
+            <div class="row">
+                <div class="col-md-9">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-success" role="alert" style="color: orange;background-color: black;border: none;">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'attendance_pdf' employee.id tm target_year %}" class="btn orange-link">pdf</a>
+                    <a href="" class="btn orange-link" onclick="printData()">print</a>
                     <button type="button" class="btn orange-link dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Share
                     </button>
@@ -134,56 +146,56 @@
                         <ul>
                             <li class="dropdown-item custom-li">
                                 <span class="whatsapp-text">
-                                    {% post_to_whatsapp object_or_url 'WhatsApp'  %}
+                                    {% post_to_whatsapp object_or_url 'WhatsApp' %}
                                 </span>
                             </li>
                             <li style="color: black;">
-                                <a href="#" class="dropdown-item custom-li" data-toggle="modal"  data-target="#shareToEmail">Mail</a>
+                                <a href="#" class="dropdown-item custom-li" data-toggle="modal" data-target="#shareToEmail">Mail</a>
                             </li>
                         </ul>
-                  
+                    </div>
                 </div>
-          </div>
-          
-          <div id="download-container">
-         <div class="row mt-5">
-            <h4 style="text-align: center;color: white;">Attendance for {{ employee.first_name }} {{ employee.last_name }} - {{ target_month }}/{{ target_year }}</h4>
-
-            <h5 style="text-align: center;color: white;">Working Days: {{ working_days }} | Holidays : {{holiday_count}} | Leave : {{leave_count}}</h5>
-         </div>
-        <div class=" row justify-content-center">
-            <div class="table-content">
-            <table class="table mt-5 custom-table ">
-                <thead >
-                    <tr  >
-                        <th scope="col" style="color: white;" >Date</th>
-                        <th scope="col" style="color: white;">Status</th>
-                        <th scope="col" style="color: white;">Reason</th>
-                        <th scope="col" class="btn-g" style="color: white;" class="btn-g">Action</th>
-                    </tr>
-                </thead>
-                <tbody style="padding-top:20px;">
-                    {% for item in items %}
-                    <tr  >
-                        <td style="color: white;font-size: 16px;">{{ item.date|date }}</td>
-                        <td style="color: white;font-size: 16px;">{{ item.status }}</td>
-                        <td style="color: white;font-size: 16px;">{{ item.reason }}</td>
-                        <td class=" btn-g">
-                            <div class="btn-group btn-g ">
-                            <a href="{% url 'attendance_edit' item.id %}" class="btn btn-add" >Edit</a>
-                            <a href="{% url 'attendance_delete' item.id  %}" class="btn btn-add " >Delete</a>
-                        </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="text-center">No Leaves found</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        </div>
+            </div>
+        
+            <div id="download-container">
+                <div class="row mt-5">
+                    <h4 style="text-align: center;color: white;">Attendance for {{ employee.first_name }} {{ employee.last_name }} - {{ target_month }}/{{ target_year }}</h4>
+                    <h5 style="text-align: center;color: white;">Working Days: {{ working_days }} | Holidays : {{holiday_count}} | Leave : {{leave_count}}</h5>
+                </div>
+                <div class="row justify-content-center">
+                    <div class="table-content">
+                        <table class="table mt-5 custom-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col" style="color: white;">Date</th>
+                                    <th scope="col" style="color: white;">Status</th>
+                                    <th scope="col" style="color: white;">Reason</th>
+                                    <th scope="col" class="btn-g" style="color: white;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody style="padding-top:20px;">
+                                {% for item in items %}
+                                    <tr>
+                                        <td style="color: white;font-size: 16px;">{{ item.date|date }}</td>
+                                        <td style="color: white;font-size: 16px;">{{ item.status }}</td>
+                                        <td style="color: white;font-size: 16px;">{{ item.reason }}</td>
+                                        <td class="btn-g" style="width: 20%;"> <!-- Adjust width as needed -->
+                                            <div class="btn-group">
+                                                <a href="{% url 'attendance_edit' item.id %}" class="btn btn-add">Edit</a>
+                                                <a href="{% url 'attendance_delete' item.id %}" class="btn btn-add">Delete</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No Leaves found</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
         <script>
             function shareViaWhatsApp() {

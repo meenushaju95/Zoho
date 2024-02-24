@@ -678,7 +678,7 @@ def add_attendance(request):
             history.save()
             attendance.save()
             messages.success(request, 'Leave Marked')
-            return redirect('company_mark_attendance')
+            return redirect('company_attendance_list')
 
 def attendance_calendar(request, employee_id, target_year, target_month):
     calendar_data = {
@@ -1128,6 +1128,9 @@ def edit_attendance(request,id):
             status = request.POST['status']
             reason = request.POST['reason']
             attendance = get_object_or_404(Attendance, id=id)
+            employee_id = attendance.employee.id
+            target_month = attendance.date.month
+            target_year = attendance.date.year
             attendance.employee=emp
             attendance.date=date
             attendance.status=status
@@ -1142,8 +1145,10 @@ def edit_attendance(request,id):
                 
             history = Attendance_History(company=company,login_details=log_details,attendance=attendance,date=date,action='Edited')
             history.save()
+            
+            
             messages.success(request,'Leave edited successfully!!')
-            return redirect('attendance_edit',id)
+            return redirect('attendance_overview',employee_id,target_month,target_year)
         
 def attendance_delete(request,id):
     item = Attendance.objects.get(id=id)

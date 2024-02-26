@@ -677,7 +677,7 @@ def add_attendance(request):
             history=Attendance_History(company=company,login_details=log_details,attendance=attendance,date=date,action='Created')
             history.save()
             attendance.save()
-            messages.success(request, 'Leave Marked')
+            
             return redirect('company_attendance_list')
 
 def attendance_calendar(request, employee_id, target_year, target_month):
@@ -1339,10 +1339,9 @@ def attendance_import(request):
             sheet = workbook.active
 
             for row in sheet.iter_rows(min_row=2, values_only=True):
-                Employee,Employee_No, date, status, reason = row
+                Employee_No, date, status, reason = row
                 
-                date_str = date.strftime('%Y-%m-%d')  # Convert datetime object to string
-                date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                
                 
                 employees = payroll_employee.objects.filter(emp_number=Employee_No)
 

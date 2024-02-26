@@ -128,7 +128,7 @@
                     <thead>
           
                         <tr>
-                            <th scope="col">Employee</th>
+                           
                             <th scope="col">Employee_No</th>
                             <th scope="col">date</th>
                             <th scope="col">Status</th>
@@ -138,7 +138,7 @@
                     <tbody>
           
                         <tr>
-                            <td> </td>
+                            
                             <td></td>
                             <td></td>
                             <td></td>
@@ -335,23 +335,29 @@
                     });
                 </script>
                 <script>
-                    function exportToExcel() {
-                        var table = document.getElementById("attendanceTable");
-                        // Create a new workbook
-                        var wb = XLSX.utils.book_new();
-                
-                        // Add a worksheet with the table data
-                        var ws = XLSX.utils.table_to_sheet(table);
-                        XLSX.utils.book_append_sheet(wb, ws, "AttendanceData");
-                
-                        // Save the workbook as an Excel file
-                        XLSX.writeFile(wb, "attendance_data.xlsx");
-                    }
-                
-                    // Event listener for export button with ID "ExportExcel"
-                    document.getElementById("ExportExcel").addEventListener("click", function () {
-                        exportToExcel();
-                    });
+                   document.getElementById("ExportExcel").addEventListener("click", function() {
+    exportToExcel();
+});
+
+function exportToExcel() {
+    var table = document.getElementById("attendanceTable");
+
+   
+    var wb = XLSX.utils.book_new();
+
+    
+    var ws = XLSX.utils.table_to_sheet(table, {
+        raw: true, 
+        cellDates: true, 
+        header: ['Staff Name', 'Month - Year', 'Holidays', 'Working Days', 'Total Leave'] // Provide custom header
+    });
+
+    
+    XLSX.utils.book_append_sheet(wb, ws, "AttendanceData");
+
+    
+    XLSX.writeFile(wb, "attendance_data.xlsx");
+}
                 </script>
 
 

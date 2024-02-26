@@ -695,7 +695,7 @@ select#employee-dropdown {
         },
         success: function(response) {
             if (response.status === 'success') {
-                alert('Employee added successfully! ID: ' + response.employee_id + ', Name: ' + response.employee_name);
+                alert('Employee added successfully!  Name: ' + response.employee_name);
                 document.getElementById("myForm").reset();
                 $("#img").attr("src", "");
                 $('#addEmployeeModal').modal('hide');

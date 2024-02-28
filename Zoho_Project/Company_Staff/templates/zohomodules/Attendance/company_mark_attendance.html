@@ -701,8 +701,12 @@ select#employee-dropdown {
                 $('#addEmployeeModal').modal('hide');
 
                 reloadItem();
-            } else if (response.status === 'error') {
-                alert('Error adding employee: ' + response.message);
+            }else if (response.status === 'error') {
+                if (response.message === 'empnum_exists') {
+                    alert('Employee with this  number already exists!');
+                } else {
+                    alert('Error adding employee: ' + response.message);
+                }
             } else {
                 alert('Unknown response status. Please try again.');
             }

@@ -1193,8 +1193,8 @@ def attendance_create_employee(request):
         workhr=request.POST['hours'] 
         empnum=request.POST['empnum']
         if payroll_employee.objects.filter(emp_number=empnum,company=company):
-            messages.info(request,'employee number all ready exists')
-            return redirect('company_mark_attendance')
+            return JsonResponse({'status': 'error', 'message': 'empnum_exists'}, status=400)
+            
         designation = request.POST['designation']
         location=request.POST['location']
         gender=request.POST['gender']
@@ -1339,32 +1339,36 @@ def attendance_import(request):
             sheet = workbook.active
 
             for row in sheet.iter_rows(min_row=2, values_only=True):
+                
                 Employee_No, date, status, reason = row
-                
-                
-                
-                employees = payroll_employee.objects.filter(emp_number=Employee_No)
-
+                if not any(row):
+                  continue 
                     
+                for employee in payroll_employee.objects.filter(emp_number=Employee_No, company=company):
+                        leave_exists = Attendance.objects.filter(employee=employee, company=company, date=date).exists()
+                        
+                        if not leave_exists:
+                            attendance = Attendance.objects.create(
+                                employee=employee,
+                                company=company,
+                                login_details=log_details,
+                                date=date,
+                                status=status,
+                                reason=reason
+                            )
+                        
                     
-                for employee in employees:
-                        attendance = Attendance.objects.create(
-                            employee=employee,
-                            company=company,
-                            login_details=log_details,
-                            date=date,
-                            status=status,
-                            reason=reason
-                        )
 
-                       
-                        history = Attendance_History.objects.create(
-                            company=company,
-                            login_details=log_details,
-                            attendance=attendance,
-                            date=date,
-                            action='Created'
-                        )
+                        
+                            history = Attendance_History.objects.create(
+                                company=company,
+                                login_details=log_details,
+                                attendance=attendance,
+                                date=date,
+                                action='Created'
+                            )
+               
+                
                 
             return redirect('company_attendance_list')
 

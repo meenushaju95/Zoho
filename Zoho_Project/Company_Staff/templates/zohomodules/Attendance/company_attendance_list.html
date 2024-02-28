@@ -104,9 +104,9 @@
                         
                        
                    
-                        <a href="#" class="orange-link mt-5  "  id="importExcel" data-toggle="modal" data-target="#importModal" onclick="excelmodel()">Import</a>
+                        <a href="#" class="orange-link mt-5  "  id="importExcel" data-toggle="modal" data-target="#importModal" onclick="excelmodel()"><i class="fa fa-share-square-o" aria-hidden="true"></i> Import</a>
                         
-                        <a href="#" class="orange-link mt-5  "  id="ExportExcel">Export</a>
+                        <a href="#" class="orange-link mt-5  "  id="ExportExcel"><i class="fa fa-share-square-o" aria-hidden="true"></i> Export</a>
                         <a href="{% url 'company_mark_attendance' %}"class="orange-link mt-5">New+</a>
                           
                     </div>
@@ -171,10 +171,10 @@
                     $(document).ready(function() {
                         $('#importLink').click(function(e) {
                             e.preventDefault(); // Prevent the default link behavior
-                            
+                             
                             // Trigger click event on the file input field
                             $('#fileInput').click();
-                        });
+                        }); 
                     
                         $('#fileInput').change(function() {
                             var file = $(this)[0].files[0];

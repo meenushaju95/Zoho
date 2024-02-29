@@ -1192,7 +1192,7 @@ def attendance_create_employee(request):
         amountperhr=request.POST['amnthr']
         workhr=request.POST['hours'] 
         empnum=request.POST['empnum']
-        if payroll_employee.objects.filter(emp_number=empnum,company=company):
+        if payroll_employee.objects.filter(emp_number=empnum,company=company).exists():
             return JsonResponse({'status': 'error', 'message': 'empnum_exists'}, status=400)
             
         designation = request.POST['designation']

@@ -541,12 +541,12 @@ def company_attendance_list(request):
 
         if log_details.user_type == 'Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
-            items = Attendance.objects.filter(company=staff.company)
+            items = Attendance.objects.filter(company=staff.company,employee__in=payroll_employee.objects.filter(status='Active'))
             allmodules= ZohoModules.objects.get(company=staff.company,status='New')
                 
         elif log_details.user_type == 'Company':
             company = CompanyDetails.objects.get(login_details=log_details)
-            items = Attendance.objects.filter(company=company)
+            items = Attendance.objects.filter(company=company,employee__in=payroll_employee.objects.filter(status='Active'))
             allmodules= ZohoModules.objects.get(company=company,status='New')
              
 

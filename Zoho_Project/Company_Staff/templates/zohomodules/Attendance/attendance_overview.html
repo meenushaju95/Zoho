@@ -246,9 +246,14 @@
             link.style.display = 'none';
         });
 
-        var headings = document.querySelectorAll('.row h4, .row h5');
+        var headings = document.querySelectorAll('.row h4');
+        var heading = document.querySelectorAll('.row h5');
         headings.forEach(function(heading) {
             heading.style.fontSize = '30px';
+            heading.style.color = 'black';
+        });
+        heading.forEach(function(heading) {
+            heading.style.fontSize = '23px';
             heading.style.color = 'black';
         });
         

@@ -913,7 +913,7 @@ def attendance_pdf(request,employee_id,target_month,target_year) :
 
         if log_details.user_type == 'Staff':
             staff = StaffDetails.objects.get(login_details=log_details)
-            items = Attendance.objects.filter(company=staff.company,date__month=target_month,date__year=target_year)
+            items = Attendance.objects.filter(company=staff.company,employee=employee,date__month=target_month,date__year=target_year)
                 
         elif log_details.user_type == 'Company':
             company = CompanyDetails.objects.get(login_details=log_details)
@@ -950,16 +950,16 @@ def attendance_pdf(request,employee_id,target_month,target_year) :
         target_month_name = MONTH_NAMES[target_month]
 
     
-# Filter holidays that fall within the target month and year
+
         days_in_month = get_days_in_month(target_year, target_month)
 
-    # Calculate the leave count for the employee
+    
         leave_count = calculate_leave_count(employee, target_month, target_year)
 
-    # Calculate the holiday count for the company
+    
         holiday_count = calculate_holiday_count(employee.company, target_month, target_year)
 
-    # Calculate the working days
+    
         working_days = len(days_in_month) - leave_count - holiday_count
 
         template_path = 'zohomodules/Attendance/attendance_pdf.html'

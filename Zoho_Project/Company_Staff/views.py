@@ -1000,7 +1000,7 @@ def attendance_email(request,employee_id,target_month,target_year):
                 if log_details.user_type == 'Staff':
                     staff = StaffDetails.objects.get(login_details=log_details)
                     company=staff.company
-                    items = Attendance.objects.filter(company=company,date__month=target_month,date__year=target_year)
+                    items = Attendance.objects.filter(company=company,employee=employee,date__month=target_month,date__year=target_year)
                         
                 elif log_details.user_type == 'Company':
                     company = CompanyDetails.objects.get(login_details=log_details)
